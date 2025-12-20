@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinDrop - Apertura de Cajas CS2</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-box-open"></i>
+                <span>SKIN<span class="accent">DROP</span></span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-link active"><i class="fas fa-home"></i> Inicio</a>
+                <a href="#cases" class="nav-link"><i class="fas fa-boxes"></i> Cajas</a>
+                <a href="#stats" class="nav-link"><i class="fas fa-chart-bar"></i> Estadísticas</a>
+                <a href="#inventory" class="nav-link"><i class="fas fa-briefcase"></i> Inventario</a>
+            </nav>
+            <div class="header-actions">
+                <div class="balance-container" id="balanceContainer">
+                    <i class="fas fa-wallet"></i>
+                    <span class="balance" id="balance">0.00</span>€
+                    <button class="add-balance-btn" id="addBalanceBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Add Balance Modal -->
+    <div class="modal" id="balanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-coins"></i> Añadir Saldo</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="promo-code-section">
+                    <label for="promoCode">Código Promocional</label>
+                    <div class="promo-input-wrapper">
+                        <input type="text" id="promoCode" placeholder="Introduce tu código...">
+                        <button class="apply-code-btn" id="applyCode">Aplicar</button>
+                    </div>
+                    <p class="promo-hint">* Introduce un código válido para recibir saldo</p>
+                </div>
+                <div class="payment-methods">
+                    <h3>Métodos de Pago</h3>
+                    <p class="coming-soon"><i class="fas fa-lock"></i> Próximamente...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Live Feed Banner -->
+        <div class="live-feed">
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+            <div class="live-feed-items" id="liveFeed">
+                <!-- Items will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>ABRE CAJAS Y GANA <span class="accent">SKINS INCREÍBLES</span></h1>
+                <p>La mejor plataforma de apertura de cajas CS2. ¡Prueba tu suerte y consigue skins legendarias!</p>
+                <a href="#cases" class="cta-button">
+                    <i class="fas fa-box-open"></i> ABRIR CAJAS
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalOpened">0</span>
+                    <span class="stat-label">Cajas Abiertas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="totalWon">0.00€</span>
+                    <span class="stat-label">Total Ganado</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="bestDrop">-</span>
+                    <span class="stat-label">Mejor Drop</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cases Section -->
+        <section class="cases-section" id="cases">
+            <div class="section-header">
+                <h2><i class="fas fa-boxes"></i> CAJAS DISPONIBLES</h2>
+                <div class="case-filters">
+                    <button class="filter-btn active" data-filter="all">Todas</button>
+                    <button class="filter-btn" data-filter="cheap">Económicas</button>
+                    <button class="filter-btn" data-filter="medium">Medias</button>
+                    <button class="filter-btn" data-filter="expensive">Premium</button>
+                </div>
+            </div>
+            <div class="cases-grid" id="casesGrid">
+                <!-- Cases will be populated by JS -->
+            </div>
+        </section>
+
+        <!-- Opening Modal -->
+        <div class="opening-modal" id="openingModal">
+            <div class="opening-content">
+                <button class="close-opening" id="closeOpening">&times;</button>
+                <h2 id="openingCaseName">Abriendo Caja...</h2>
+                
+                <!-- Roulette Container -->
+                <div class="roulette-container">
+                    <div class="roulette-pointer"></div>
+                    <div class="roulette-track" id="rouletteTrack">
+                        <!-- Items will be populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Won Item Display -->
+                <div class="won-item-display" id="wonItemDisplay">
+                    <div class="won-item-glow"></div>
+                    <img src="" alt="" id="wonItemImage">
+                    <div class="won-item-info">
+                        <h3 id="wonItemName"></h3>
+                        <p id="wonItemPrice"></p>
+                    </div>
+                    <div class="won-actions">
+                        <button class="sell-btn" id="sellBtn">
+                            <i class="fas fa-coins"></i> Vender
+                        </button>
+                        <button class="keep-btn" id="keepBtn">
+                            <i class="fas fa-briefcase"></i> Guardar
+                        </button>
+                        <button class="open-again-btn" id="openAgainBtn">
+                            <i class="fas fa-redo"></i> Abrir Otra
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Case Contents Preview -->
+                <div class="case-contents">
+                    <h3><i class="fas fa-list"></i> Contenido de la Caja</h3>
+                    <div class="contents-grid" id="contentsGrid">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <section class="stats-section" id="stats">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-bar"></i> TUS ESTADÍSTICAS</h2>
+            </div>
+            <div class="stats-container">
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-box-open"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statCasesOpened">0</span>
+                        <span class="stats-label">Cajas Abiertas</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-coins"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statTotalSpent">0.00€</span>
+                        <span class="stats-label">Total Gastado</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statTotalWon">0.00€</span>
+                        <span class="stats-label">Total Ganado</span>
+                    </div>
+                </div>
+                <div class="stats-card profit">
+                    <div class="stats-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statProfit">0.00€</span>
+                        <span class="stats-label">Beneficio/Pérdida</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drop History -->
+            <div class="drop-history">
+                <h3><i class="fas fa-history"></i> Historial de Drops</h3>
+                <div class="history-list" id="historyList">
+                    <p class="no-history">Aún no has abierto ninguna caja</p>
+                </div>
+            </div>
+
+            <!-- Rarity Stats -->
+            <div class="rarity-stats">
+                <h3><i class="fas fa-gem"></i> Drops por Rareza</h3>
+                <div class="rarity-bars" id="rarityBars">
+                    <div class="rarity-bar consumer">
+                        <span class="rarity-name">Consumer Grade</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="consumer" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countConsumer">0</span>
+                    </div>
+                    <div class="rarity-bar industrial">
+                        <span class="rarity-name">Industrial Grade</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="industrial" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countIndustrial">0</span>
+                    </div>
+                    <div class="rarity-bar milspec">
+                        <span class="rarity-name">Mil-Spec</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="milspec" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countMilspec">0</span>
+                    </div>
+                    <div class="rarity-bar restricted">
+                        <span class="rarity-name">Restricted</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="restricted" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countRestricted">0</span>
+                    </div>
+                    <div class="rarity-bar classified">
+                        <span class="rarity-name">Classified</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="classified" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countClassified">0</span>
+                    </div>
+                    <div class="rarity-bar covert">
+                        <span class="rarity-name">Covert</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="covert" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countCovert">0</span>
+                    </div>
+                    <div class="rarity-bar gold">
+                        <span class="rarity-name">★ Rare Special</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="gold" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countGold">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Section -->
+        <section class="inventory-section" id="inventory">
+            <div class="section-header">
+                <h2><i class="fas fa-briefcase"></i> TU INVENTARIO</h2>
+                <div class="inventory-value">
+                    Valor Total: <span id="inventoryValue">0.00€</span>
+                </div>
+            </div>
+            <div class="inventory-grid" id="inventoryGrid">
+                <p class="no-items">Tu inventario está vacío</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-box-open"></i>
+                <span>SKIN<span class="accent">DROP</span></span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Términos de Servicio</a>
+                <a href="#">Política de Privacidad</a>
+                <a href="#">Provably Fair</a>
+                <a href="#">Contacto</a>
+            </div>
+            <div class="footer-disclaimer">
+                <p>Este sitio es solo para entretenimiento. No se realizan transacciones reales.</p>
+                <p>+18 | Juega con responsabilidad</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Audio Elements -->
+    <audio id="spinSound" preload="auto">
+        <source src="https://www.soundjay.com/mechanical/sounds/ratchet-wheel-1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
