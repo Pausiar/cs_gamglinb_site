@@ -258,7 +258,7 @@
     align-items: center;
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    margin-top: -65px; /* centred without transform: app.js drives the track with transform: translateX() */
     transition: none;
     height: 130px;
 }

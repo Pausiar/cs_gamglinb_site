@@ -233,6 +233,187 @@
         };
     };
 
+    T.neon = function (k) {
+        var grid = '';
+        for (var i = -7; i <= 7; i++) grid += '<path d="M' + (100 + i * 7) + ' 150L' + (100 + i * 36) + ' 200"/>';
+        [158, 168, 180, 194].forEach(function (y) { grid += '<path d="M0 ' + y + 'H200"/>'; });
+        var tube = function (x, c) {
+            return '<path d="M' + x + ' 40V150" stroke="' + c + '" stroke-width="9" stroke-linecap="round" opacity=".25"/>' +
+                '<path d="M' + x + ' 40V150" stroke="' + c + '" stroke-width="3.500" stroke-linecap="round"/>' +
+                '<path d="M' + x + ' 40V150" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".8"/>';
+        };
+        return {
+            defs: lg(k + 'g', ['#2b0a4a', '#0b0218']) + rg(k + 'r', '#ff2bd6', '#ff2bd6', .5) +
+                lg(k + 'b', ['#2a1245', '#120620']) + lg(k + 'l', ['#3a1a5e', '#1c0a30']) +
+                lg(k + 'n', ['#ffe14a', '#ff2bd6'], 0, 1) + lg(k + 'e', ['#6ef2ff', '#ffffff'], 0, 1),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><circle cx="100" cy="50" r="38" fill="url(#' + k + 'n)" opacity=".8"/>' +
+                '<g fill="#0b0218"><rect x="50" y="46" width="100" height="2.500"/><rect x="50" y="53" width="100" height="3.500"/><rect x="50" y="61" width="100" height="5"/></g>' +
+                '<circle cx="100" cy="100" r="100" fill="url(#' + k + 'r)"/>' +
+                '<g stroke="#ff2bd6" stroke-opacity=".55" fill="none" stroke-width="1">' + grid + '</g>',
+            back: tube(16, '#6ef2ff') + tube(184, '#ff2bd6') + sparkle(34, 30, 6, '#fff', .9) + sparkle(168, 26, 5, '#6ef2ff', .9),
+            c: { edge: '#12041f', trim: '#ff2bd6', top: '#4a2275', plate: 'rgba(8,2,18,.62)' },
+            lid: '<path d="M48 82H152" stroke="#6ef2ff" stroke-width="7" stroke-linecap="round" opacity=".25"/><path d="M48 82H152" stroke="#6ef2ff" stroke-width="2.500" stroke-linecap="round"/>' +
+                '<path d="M48 82H152" stroke="#fff" stroke-width=".8" opacity=".8"/>',
+            emb: '<polygon points="110,110 80,138 98,138 88,162 122,126 104,126" fill="#ff2bd6" opacity=".35" stroke="#ff2bd6" stroke-width="6" stroke-linejoin="round"/>' +
+                '<polygon points="110,110 80,138 98,138 88,162 122,126 104,126" fill="url(#' + k + 'e)" stroke="#fff" stroke-width="1.500" stroke-linejoin="round"/>'
+        };
+    };
+
+    T.desert = function (k) {
+        var cactus = function (x, y, s) {
+            return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')" fill="#3f7d3a" stroke="#1f4a1d" stroke-width="1.500" stroke-linejoin="round">' +
+                '<rect x="-5" y="-40" width="10" height="42" rx="5"/><path d="M-5 -14H-13Q-17 -14 -17 -18V-26Q-17 -30 -13 -30Q-9 -30 -9 -26V-20H-5Z"/>' +
+                '<path d="M5 -22H11Q15 -22 15 -26V-32Q15 -36 11 -36Q7 -36 7 -32V-28H5Z"/></g>';
+        };
+        return {
+            defs: lg(k + 'g', ['#5a2c14', '#e8a45a', '#f7d28a'], 0, 1) + rg(k + 'r', '#fff0b0', '#e0a458', .6) +
+                lg(k + 'b', ['#d7a05c', '#9a6530']) + lg(k + 'l', ['#e8b974', '#b07a40']) + lg(k + 'd', ['#c98a4a', '#8a5528']),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><circle cx="148" cy="52" r="24" fill="#fff4c4"/><circle cx="148" cy="52" r="34" fill="url(#' + k + 'r)"/>' +
+                '<path d="M-5 150Q40 120 90 148T205 140V205H-5Z" fill="url(#' + k + 'd)"/><path d="M-5 172Q50 150 110 170T205 164V205H-5Z" fill="#7a4620" opacity=".7"/>' +
+                '<path d="M20 136L34 112L48 136Z" fill="#b87a40" opacity=".5"/>',
+            back: cactus(22, 168, 1.1) + cactus(180, 172, .85),
+            c: { edge: '#3d2410', trim: '#f6e0a8', top: '#efc888', plate: 'rgba(60,30,10,.45)' },
+            lid: '<path d="M46 90l8-9 8 9 8-9 8 9 8-9 8 9 8-9 8 9 8-9 8 9 8-9 8 9" fill="none" stroke="#fff3cf" stroke-width="2.500" stroke-linejoin="round" opacity=".9"/>',
+            emb: '<circle cx="100" cy="140" r="21" fill="#ffd27a" stroke="#b9772c" stroke-width="2"/><path d="M100 112V104M80 120L74 114M120 120L126 114M72 140H64M128 140H136" stroke="#ffd27a" stroke-width="3" stroke-linecap="round"/>' +
+                '<g fill="#3f7d3a" stroke="#1f4a1d" stroke-width="1.500" stroke-linejoin="round"><rect x="94" y="126" width="12" height="36" rx="6"/><path d="M94 146H84Q80 146 80 142V134Q80 130 84 130Q88 130 88 134V140H94Z"/><path d="M106 142H114Q118 142 118 138V132Q118 128 114 128Q110 128 110 132V136H106Z"/></g>'
+        };
+    };
+
+    T.arctic = function (k) {
+        var flake = '';
+        for (var a = 0; a < 6; a++) {
+            flake += '<g transform="rotate(' + (a * 60) + ' 100 136)"><path d="M100 136V112M100 122L94 116M100 122L106 116M100 130L96 126M100 130L104 126"/></g>';
+        }
+        var spikes = '<path d="M0 150L14 96L28 150ZM20 150L38 110L52 150Z" fill="#bfeaff" opacity=".6"/><path d="M200 150L186 90L172 150ZM182 150L164 114L150 150Z" fill="#bfeaff" opacity=".6"/>';
+        return {
+            defs: lg(k + 'g', ['#071a2e', '#16466b', '#1b5f86'], 0, 1) + rg(k + 'r', '#bff0ff', '#8fdcff', .45) +
+                lg(k + 'b', ['#9fdcf5', '#4f95bc']) + lg(k + 'l', ['#bdeaff', '#6aaed0']) + lg(k + 'a', ['#7dffc8', '#4cc9f0'], 1, 0),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<path d="M-5 40Q50 10 100 44T205 26V70Q150 90 100 64T-5 80Z" fill="url(#' + k + 'a)" opacity=".28"/>' +
+                '<path d="M-5 70Q60 40 110 76T205 56V84Q150 104 100 90T-5 100Z" fill="url(#' + k + 'a)" opacity=".18"/>' +
+                '<circle cx="100" cy="100" r="100" fill="url(#' + k + 'r)"/>' +
+                '<g fill="#fff" opacity=".8"><circle cx="30" cy="22" r="1.500"/><circle cx="76" cy="14" r="1"/><circle cx="130" cy="20" r="1.500"/><circle cx="176" cy="12" r="1"/><circle cx="52" cy="60" r="1"/><circle cx="160" cy="62" r="1.200"/></g>' +
+                '<path d="M-5 176Q40 160 90 174T205 168V205H-5Z" fill="#e8f7ff"/>',
+            back: spikes,
+            c: { edge: '#0c2a3d', trim: '#f0fbff', top: '#d4f2ff', plate: 'rgba(8,36,56,.5)' },
+            lid: '<g fill="#f0fbff" stroke="#0c2a3d" stroke-width="1" stroke-linejoin="round"><path d="M46 96l5 11 5-11ZM64 96l4 8 4-8ZM128 96l4 8 4-8ZM144 96l5 11 5-11Z"/></g>' +
+                '<path d="M52 76H148" stroke="#fff" stroke-width="2" opacity=".7" stroke-linecap="round"/>',
+            emb: '<g stroke="#f0fbff" stroke-width="2.800" stroke-linecap="round" fill="none">' + flake + '</g><circle cx="100" cy="136" r="4" fill="#bff0ff" stroke="#f0fbff" stroke-width="1.500"/>'
+        };
+    };
+
+    T.glock = function (k) {
+        var stripes = '';
+        for (var i = -2; i < 9; i++) stripes += '<path d="M' + (i * 30) + ' 200L' + (i * 30 + 70) + ' 0" />';
+        return {
+            defs: lg(k + 'g', ['#2a2a2f', '#0e0e10']) + rg(k + 'r', '#ffb703', '#ffb703', .4) +
+                lg(k + 'b', ['#45454c', '#1c1c20']) + lg(k + 'l', ['#585860', '#26262b']) + lg(k + 'm', ['#4a4a52', '#16161a']),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><g stroke="#ffb703" stroke-width="9" stroke-opacity=".12">' + stripes + '</g>' +
+                '<circle cx="100" cy="100" r="100" fill="url(#' + k + 'r)"/>',
+            back: '<g fill="#d9a02a" stroke="#6b4a08" stroke-width="1.200"><g transform="translate(22 150) rotate(-18)"><rect x="-5" y="-14" width="10" height="26" rx="1.500"/><rect x="-5" y="-14" width="10" height="5" fill="#a87a14"/></g>' +
+                '<g transform="translate(178 152) rotate(22)"><rect x="-5" y="-14" width="10" height="26" rx="1.500"/><rect x="-5" y="-14" width="10" height="5" fill="#a87a14"/></g></g>',
+            c: { edge: '#09090a', trim: '#ffb703', top: '#6a6a72', plate: 'rgba(0,0,0,.55)' },
+            lid: '<path d="M46 78H154" stroke="#ffb703" stroke-width="2" opacity=".85"/><g fill="#ffb703"><rect x="48" y="86" width="10" height="3" transform="skewX(-30) translate(30 0)"/><rect x="64" y="86" width="10" height="3" transform="skewX(-30) translate(30 0)"/><rect x="80" y="86" width="10" height="3" transform="skewX(-30) translate(30 0)"/></g>',
+            emb: '<g stroke="#ffb703" stroke-width="1.500" stroke-linejoin="round"><path d="M66 134H92L88 160H72Z" fill="#26262b"/><rect x="62" y="116" width="78" height="18" rx="3" fill="#16161a"/>' +
+                '<path d="M92 134H124L120 144H100L97 150H92Z" fill="#26262b"/></g>' +
+                '<path d="M101 144V148Q101 153 106 153H110Q114 153 114 149V144" fill="none" stroke="#ffb703" stroke-width="1.800"/>' +
+                '<g stroke="#ffb703" stroke-width="1.500" stroke-linecap="round"><path d="M70 120V130M75 120V130M80 120V130"/></g>' +
+                '<rect x="62" y="116" width="78" height="3" rx="1.500" fill="#fff" opacity=".35"/><rect x="132" y="112" width="4" height="4" fill="#ffb703"/><rect x="64" y="112" width="4" height="4" fill="#ffb703"/>' +
+                '<path d="M140 125H146" stroke="#ffb703" stroke-width="3" stroke-linecap="round"/>'
+        };
+    };
+
+    T.pistols = function (k) {
+        var rays = '';
+        for (var i = 0; i < 9; i++) rays += '<path d="M100 175L' + (-60 + i * 40) + ' -20"/>';
+        var hole = function (x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#031512"/><circle cx="' + x + '" cy="' + y + '" r="6.500" fill="none" stroke="#2ec4b6" stroke-opacity=".35"/>'; };
+        var ch = '';
+        for (var a = 0; a < 6; a++) {
+            var r = a * Math.PI / 3;
+            ch += '<circle cx="' + (100 + 13 * Math.cos(r)).toFixed(1) + '" cy="' + (136 + 13 * Math.sin(r)).toFixed(1) + '" r="5.500" fill="#06201d" stroke="#8a9ba0" stroke-width="1.200"/>';
+        }
+        return {
+            defs: lg(k + 'g', ['#0b3b38', '#031512']) + rg(k + 'r', '#ffe08a', '#2ec4b6', .55) +
+                lg(k + 'b', ['#34a69d', '#1a5f5a']) + lg(k + 'l', ['#46bdb3', '#237068']) + lg(k + 'c', ['#eef3f4', '#8a9ba0'], 1, 1),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><g stroke="#ffe08a" stroke-opacity=".1" stroke-width="12">' + rays + '</g>' +
+                '<circle cx="100" cy="175" r="80" fill="url(#' + k + 'r)"/><path d="M-5 176Q50 160 100 174T205 168V205H-5Z" fill="#031512" opacity=".7"/>',
+            back: hole(24, 52) + hole(176, 70) + hole(34, 120) + hole(168, 130),
+            c: { edge: '#031512', trim: '#ffe08a', top: '#5ccfc4', plate: 'rgba(2,20,18,.55)' },
+            lid: '<polygon points="' + star(100, 82, 12, 5.500, 6) + '" fill="#ffe08a" stroke="#7a5a10" stroke-width="1.200" stroke-linejoin="round"/>' +
+                '<g fill="#ffe08a">' + [0, 1, 2, 3, 4, 5].map(function (n) { var t = -Math.PI / 2 + n * Math.PI / 3; return '<circle cx="' + (100 + 14.5 * Math.cos(t)).toFixed(1) + '" cy="' + (82 + 14.5 * Math.sin(t)).toFixed(1) + '" r="1.600"/>'; }).join('') + '</g>',
+            emb: '<circle cx="100" cy="136" r="25" fill="url(#' + k + 'c)" stroke="#031512" stroke-width="2.500"/>' + ch +
+                '<circle cx="100" cy="136" r="4.500" fill="#46606a" stroke="#031512" stroke-width="1.200"/>' +
+                '<path d="M80 120Q92 112 106 113" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>'
+        };
+    };
+
+    T.gloves = function (k) {
+        var stitch = '';
+        for (var i = 0; i < 8; i++) stitch += '<path d="M' + (i * 30 - 40) + ' 210L' + (i * 30 + 40) + ' -10"/>';
+        return {
+            defs: lg(k + 'g', ['#4a1024', '#17040b']) + rg(k + 'r', '#ff7ea0', '#ff5e8a', .5) +
+                lg(k + 'b', ['#a33150', '#5a1226']) + lg(k + 'l', ['#bc4262', '#6d1a30']) + lg(k + 'p', ['#3a3a46', '#191920']),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><g stroke="#ff9ab8" stroke-opacity=".2" stroke-width="1.200" stroke-dasharray="5 4" fill="none">' + stitch + '</g>' +
+                '<circle cx="100" cy="100" r="100" fill="url(#' + k + 'r)"/>',
+            back: sparkle(26, 44, 7, '#ffd0dc', .9) + sparkle(176, 60, 5, '#ff9ab8', .9) + sparkle(30, 128, 5, '#ff9ab8', .7) + sparkle(172, 132, 7, '#ffd0dc', .8),
+            c: { edge: '#2a0612', trim: '#ffd0dc', top: '#cc5575', plate: 'rgba(30,2,10,.55)' },
+            lid: '<path d="M44 90H156" stroke="#ffd0dc" stroke-width="1.800" stroke-dasharray="6 4" opacity=".9"/><path d="M44 74H156" stroke="#ffd0dc" stroke-width="1.800" stroke-dasharray="6 4" opacity=".6"/>',
+            emb: '<g fill="url(#' + k + 'p)" stroke="#ff9ab8" stroke-width="1.800" stroke-linejoin="round">' +
+                '<rect x="68" y="136" width="24" height="12" rx="6" transform="rotate(-32 76 142)"/>' +
+                '<rect x="80" y="112" width="11" height="30" rx="5.500"/><rect x="91.500" y="106" width="11" height="34" rx="5.500"/><rect x="103" y="110" width="11" height="31" rx="5.500"/><rect x="114.500" y="118" width="10" height="23" rx="5"/>' +
+                '<rect x="80" y="130" width="45" height="28" rx="9"/></g>' +
+                '<rect x="82" y="156" width="41" height="8" rx="2" fill="#ffd0dc" stroke="#6d1a30" stroke-width="1.200"/>' +
+                '<g stroke="#ff9ab8" stroke-width="1.200" stroke-dasharray="3 2.500" fill="none" stroke-linecap="round"><path d="M85.500 118V132M97 113V132M108.500 116V132M119.500 123V132"/></g>'
+        };
+    };
+
+    T.cyber = function (k) {
+        var trace = function (d) { return '<path d="' + d + '" fill="none" stroke="#fcee0a" stroke-width="1.500" stroke-opacity=".5"/>'; };
+        var node = function (x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#0f0f06" stroke="#fcee0a" stroke-width="1.500"/>'; };
+        var pins = '';
+        for (var i = 0; i < 4; i++) {
+            var p = 87 + i * 9;
+            pins += '<rect x="' + (p - 1.5) + '" y="112" width="3" height="6"/><rect x="' + (p - 1.5) + '" y="154" width="3" height="6"/>' +
+                '<rect x="75" y="' + (p - 1.5 + 12) + '" width="6" height="3"/><rect x="119" y="' + (p - 1.5 + 12) + '" width="6" height="3"/>';
+        }
+        return {
+            defs: lg(k + 'g', ['#26240a', '#080803']) + rg(k + 'r', '#fcee0a', '#fcee0a', .35) +
+                lg(k + 'b', ['#3b3a14', '#16160a']) + lg(k + 'l', ['#4c4b1c', '#201f0c']) +
+                '<pattern id="' + k + 'p" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="2" fill="#fcee0a" opacity=".06"/></pattern>',
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><rect width="200" height="200" rx="18" fill="url(#' + k + 'p)"/>' +
+                '<circle cx="100" cy="100" r="100" fill="url(#' + k + 'r)"/>' +
+                trace('M0 40H30L44 54H70') + trace('M200 48H168L154 34H132') + trace('M0 150H20L34 164H60') + trace('M200 140H180L166 154H146') + node(70, 54) + node(132, 34) + node(60, 164) + node(146, 154),
+            back: '<path d="M0 30H14M186 22H200" stroke="#fcee0a" stroke-width="3"/>',
+            c: { edge: '#050503', trim: '#fcee0a', top: '#5a5820', plate: 'rgba(5,5,2,.65)' },
+            lid: '<g fill="#fcee0a"><path d="M46 90L54 76H64L56 90ZM68 90L76 76H86L78 90ZM90 90L98 76H108L100 90ZM112 90L120 76H130L122 90ZM134 90L142 76H152L144 90Z" opacity=".9"/></g>',
+            emb: '<g fill="#fcee0a">' + pins + '</g><rect x="81" y="118" width="38" height="38" rx="4" fill="#14140a" stroke="#fcee0a" stroke-width="2.500"/>' +
+                '<rect x="89" y="126" width="22" height="22" rx="2" fill="none" stroke="#fcee0a" stroke-width="1.500"/><circle cx="100" cy="137" r="5" fill="#fcee0a"/>' +
+                '<path d="M100 137H108V143M100 137L94 131" stroke="#14140a" stroke-width="1.500" fill="none" opacity=".0"/><path d="M85 122H93" stroke="#fff" stroke-width="2" opacity=".6" stroke-linecap="round"/>'
+        };
+    };
+
+    T.halloween = function (k) {
+        var bat = function (x, y, s) {
+            return '<path transform="translate(' + x + ' ' + y + ') scale(' + s + ')" d="M0 0Q5 -7 10 -2Q13 -9 16 -2Q21 -7 26 0Q20 -1 17 6L13 1L9 6Q6 -1 0 0Z" fill="#0b0414"/>';
+        };
+        return {
+            defs: lg(k + 'g', ['#1a0a2e', '#3b1560', '#5a2060'], 0, 1) + rg(k + 'r', '#ffb25a', '#ff7a00', .5) +
+                lg(k + 'b', ['#5c3585', '#2a1342']) + lg(k + 'l', ['#6f43a0', '#351a52']) + rg(k + 'm', '#fff2c8', '#ffb25a', 1) + lg(k + 'o', ['#ffa726', '#e65100'], 1, 1),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/><circle cx="150" cy="44" r="26" fill="url(#' + k + 'm)"/><circle cx="150" cy="44" r="40" fill="url(#' + k + 'r)" opacity=".5"/>' +
+                '<g fill="#fff" opacity=".7"><circle cx="30" cy="30" r="1.200"/><circle cx="64" cy="18" r="1"/><circle cx="100" cy="36" r="1.200"/><circle cx="20" cy="80" r="1"/></g>' +
+                bat(120, 30, .9) + bat(34, 56, .7) + bat(70, 20, .5) +
+                '<path d="M-5 168Q30 156 60 170T120 166T205 172V205H-5Z" fill="#0b0414"/>',
+            back: '<g fill="#0b0414"><path d="M10 168V120Q10 112 18 112Q26 112 26 120V168Z"/><path d="M174 168V128Q174 120 182 120Q190 120 190 128V168Z"/>' +
+                '<path d="M30 168L34 132L40 168ZM160 168L165 138L171 168Z"/></g><path d="M18 126V140M14 133H22" stroke="#5a2060" stroke-width="2" stroke-linecap="round"/>',
+            c: { edge: '#12061f', trim: '#ff9a1f', top: '#8355b8', plate: 'rgba(12,4,22,.6)' },
+            lid: '<path d="M44 90l7-10 7 10 7-10 7 10 7-10 7 10 7-10 7 10 7-10 7 10 7-10 7 10" fill="none" stroke="#ff9a1f" stroke-width="2.500" stroke-linejoin="round" opacity=".95"/>',
+            emb: '<path d="M98 110Q96 104 102 100" stroke="#5aa832" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+                '<ellipse cx="100" cy="137" rx="25" ry="22" fill="url(#' + k + 'o)" stroke="#7a2e00" stroke-width="2"/><path d="M100 115Q90 137 100 159M100 115Q110 137 100 159" stroke="#b34700" stroke-width="1.500" fill="none" opacity=".7"/>' +
+                '<path d="M83 129L92 129L87.500 121ZM108 129L117 129L112.500 121Z" fill="#2a0e00"/><path d="M86 143L91 148L96 143L100 148L104 143L109 148L114 143" stroke="#2a0e00" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>' +
+                '<path d="M84 122Q90 114 100 114" stroke="#fff" stroke-width="2.500" fill="none" stroke-linecap="round" opacity=".5"/>'
+        };
+    };
+
     // ---------- fallback theme (unknown key): derive from primary/dark ----------
     T._generic = function (k, theme) {
         var p = theme.primary || '#ff6b35', d = theme.dark || '#222';
