@@ -508,37 +508,7 @@ function renderFeaturedCases() {
         .join('');
 }
 
-// ==================== LIVE FEED (index) ====================
-function initLiveFeed() {
-    const liveFeed = byId('liveFeed');
-    if (!liveFeed) return;
-    const fakeUsers = ['xXDragonSlayerXx', 'ProGamer2024', 'SkinMaster', 'LuckyShot', 'CS2Legend', 'HeadshotKing', 'NightHunter', 'SilverFox', 'GoldenEagle', 'PhantomX'];
-
-    // Generate random drops for live feed
-    let feedItems = [];
-    for (let i = 0; i < 20; i++) {
-        const randomRarity = Object.keys(skins)[Math.floor(Math.random() * Object.keys(skins).length)];
-        const randomSkin = skins[randomRarity][Math.floor(Math.random() * skins[randomRarity].length)];
-        const randomUser = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
-
-        feedItems.push({
-            user: randomUser,
-            skin: randomSkin,
-            rarity: randomRarity
-        });
-    }
-
-    // Duplicate for infinite scroll
-    feedItems = [...feedItems, ...feedItems];
-
-    liveFeed.innerHTML = feedItems.map(item => `
-        <div class="live-item">
-            <img src="${item.skin.image}" alt="${item.skin.name}">
-            <span class="live-item-name">${item.user}</span>
-            <span class="live-item-price" style="color: ${getRarityColor(item.rarity)}">${item.skin.price.toFixed(2)}€</span>
-        </div>
-    `).join('');
-}
+// Live feed (index): real drops rendered by js/feed.js
 
 // ==================== BALANCE MODAL (injected by layout.js on every page) ====================
 const balanceModal = byId('balanceModal');
@@ -879,10 +849,6 @@ document.addEventListener('DOMContentLoaded', () => {
     auth = loadGuestState();
     refreshDisplay();
     renderFeaturedCases();
-    initLiveFeed();
-
-    // Update live feed periodically (index only)
-    if (byId('liveFeed')) setInterval(initLiveFeed, 30000);
 });
 
 // Kept global for compatibility
