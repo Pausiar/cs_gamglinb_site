@@ -1,0 +1,335 @@
+/* Provably Fair page (rendered by js/fair.js into #fairRoot) */
+
+.fair {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    color: var(--text-secondary);
+    font-size: 17px;
+    line-height: 1.55;
+}
+
+.fair strong { color: var(--text-primary); }
+.fair em { color: var(--accent-secondary); font-style: normal; }
+.fair a { color: var(--accent-primary); }
+
+.fair code {
+    padding: 1px 6px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--accent-secondary);
+    overflow-wrap: anywhere;
+}
+
+.fair-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    color: var(--text-primary);
+}
+
+.fair-muted { color: var(--text-muted); font-size: 0.95em; }
+.fair-muted.fair-mono { color: var(--text-muted); }
+
+.fair-lead { color: var(--text-primary); font-size: 18px; }
+
+/* ---- intro steps ---- */
+.fair-steps {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.fair-steps li {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+}
+
+.fair-steps p { margin-top: 4px; font-size: 15.5px; }
+
+.fair-step-n {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    color: var(--bg-primary);
+    background: var(--accent-primary);
+    border-radius: 50%;
+}
+
+/* ---- cards ---- */
+.fair-card {
+    padding: 22px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.fair-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fair-card h3 i { color: var(--accent-primary); }
+.fair-card h4 { color: var(--text-primary); font-size: 18px; margin-top: 4px; }
+
+/* ---- definition lists ---- */
+.fair-dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    min-width: 0;
+}
+
+.fair-dl dt { color: var(--text-muted); }
+.fair-dl dd { min-width: 0; }
+
+.fair-current {
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+}
+
+/* ---- form controls ---- */
+.fair-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.fair-game {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.fair-game[hidden] { display: none; }
+.fair-wide { grid-column: 1 / -1; }
+
+.fair-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    font-size: 15px;
+    color: var(--text-secondary);
+}
+
+.fair input[type="text"],
+.fair input[type="number"],
+.fair select {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--border-radius);
+}
+
+.fair input:focus-visible,
+.fair select:focus-visible,
+.fair button:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+.fair-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.fair-check input { margin-top: 5px; accent-color: var(--accent-primary); }
+
+.fair-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.fair-seedform {
+    display: flex;
+    gap: 14px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.fair-seedform .fair-field { flex: 1 1 280px; }
+
+.fair-actions { display: flex; }
+
+.fair .cta-button.fair-submit {
+    padding: 11px 24px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.fair .cta-button:disabled { opacity: 0.6; cursor: wait; }
+
+.fair-btn,
+.fair-icon-btn {
+    font: inherit;
+    font-size: 15px;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--border-radius);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.fair-icon-btn { padding: 8px 11px; }
+
+.fair-btn:hover,
+.fair-icon-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+
+.fair-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.fair-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 999px;
+    font-size: 14.5px;
+    color: var(--text-primary);
+}
+
+.fair-chip button {
+    width: 22px;
+    height: 22px;
+    line-height: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.08);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* ---- notes / messages ---- */
+.fair-note {
+    display: flex;
+    gap: 14px;
+    padding: 16px 18px;
+    background: rgba(255, 107, 53, 0.08);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-left-width: 4px;
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.fair-note > i { color: var(--accent-primary); font-size: 22px; margin-top: 2px; }
+.fair-guest-cta { margin-top: 12px; }
+.fair-guest-cta .cta-button { display: inline-flex; gap: 8px; align-items: center; padding: 10px 22px; font-size: 16px; text-decoration: none; }
+
+.fair-msg { min-height: 0; font-size: 15px; }
+.fair-msg:empty { display: none; }
+.fair-msg.ok { color: #6ee7a0; }
+.fair-msg.err { color: #ff7b7b; }
+
+.fair-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.fair-badge.ok { color: #6ee7a0; }
+.fair-badge.bad { color: #ff7b7b; }
+
+/* ---- revealed seeds ---- */
+.fair-revlist { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+.fair-rev {
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.fair-rev-head { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; }
+.fair-rev .fair-btn { align-self: flex-start; }
+
+/* ---- verifier output ---- */
+.fair-out { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fair-out:empty { display: none; }
+.fair-out p { overflow-wrap: anywhere; }
+
+.fair-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--rc, #fff);
+    border-radius: 8px;
+    max-width: 480px;
+}
+
+.fair-item strong { color: var(--rc, #fff); font-size: 19px; }
+.fair-item-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+
+.fair-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.fair-table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 520px; }
+.fair-table th, .fair-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.08); vertical-align: top; }
+.fair-table th { color: var(--text-primary); }
+.fair-table tfoot td { border-bottom: 0; }
+
+/* ---- algorithm ---- */
+.fair-algo { padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+
+.fair-code {
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.fair-code code { padding: 0; background: none; color: var(--text-primary); overflow-wrap: normal; }
+
+@media (max-width: 760px) {
+    .fair { font-size: 16px; gap: 18px; }
+    .fair-steps { grid-template-columns: 1fr; }
+    .fair-card { padding: 16px; }
+    .fair-form, .fair-game { grid-template-columns: 1fr; }
+    .fair-dl { grid-template-columns: 1fr; gap: 2px; }
+    .fair-dl dd { margin-bottom: 8px; }
+    .fair .cta-button.fair-submit { width: 100%; }
+}

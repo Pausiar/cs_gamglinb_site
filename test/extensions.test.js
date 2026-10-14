@@ -129,7 +129,7 @@ test('a dummy route module registered in a test gets all the core security', asy
 });
 
 test('router.action runs a registered server action (persisted) and answers { state, result }', async () => {
-    const srv = await startServer({ handler: { routeModules: [dummyRoutes] } });
+    const srv = await startServer({ handler: { routeModules: [dummyRoutes], hookModules: [] } });
     try {
         const r = await call(srv.base, '/api/dummy/bonus', { body: { amount: 2.5 } });
         assert.equal(r.status, 200);
