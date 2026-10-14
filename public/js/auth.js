@@ -47,6 +47,8 @@
         try {
             if (steamId && typeof sd.setServerMode === 'function') {
                 sd.setServerMode(steamId);
+                // Commit the provably-fair server seed (publish its hash) before the first play
+                fetch('/api/fair', { credentials: 'same-origin' }).catch(() => {});
             } else if (!steamId && typeof sd.useGuestMode === 'function') {
                 sd.useGuestMode();
             } else if (typeof sd.switchProfile === 'function') {

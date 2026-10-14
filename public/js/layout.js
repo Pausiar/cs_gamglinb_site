@@ -9,6 +9,10 @@
 // The active nav link comes from <body data-page="cajas"> (falls back to the URL).
 // To add a page to the menu, add one entry to NAV; footer links live in FOOTER_LINKS.
 (function () {
+    // Logged-in hint (set by the server, see auth): avoid painting a guest balance first
+    var HAS_HINT = /(^|;\s*)sd_hint=1(;|$)/.test(document.cookie || '');
+    if (HAS_HINT) document.documentElement.classList.add('sd-loading');
+
     'use strict';
 
     // key = value of <body data-page>; href = clean URL (see "cleanUrls" in vercel.json)
@@ -79,7 +83,7 @@
                     '<div class="header-actions">' +
                         '<div class="balance-container" id="balanceContainer">' +
                             '<i class="fas fa-wallet"></i>' +
-                            '<span class="balance" id="balance">0.00</span>€' +
+                            '<span class="balance" id="balance">' + (HAS_HINT ? '…' : '0.00') + '</span>€' +
                             '<button type="button" class="add-balance-btn" id="addBalanceBtn" aria-label="Añadir saldo">' +
                                 '<i class="fas fa-plus"></i>' +
                             '</button>' +
