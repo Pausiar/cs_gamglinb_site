@@ -354,9 +354,8 @@
         return pool.slice(0, count);
     }
 
-    function battle(state, params, rng, now) {
-        const r = rngOf(rng);
-        const p = objParams(params);
+    // Validates the shared battle settings: { mode, crazy, caseIds } -> { modeKey, mode, crazy, caseList }
+    function parseBattleConfig(p) {
         const modeKey = p.mode;
         const mode = typeof modeKey === 'string' && Object.prototype.hasOwnProperty.call(BATTLE_MODES, modeKey) ? BATTLE_MODES[modeKey] : null;
         if (!mode) fail('Modo de batalla inválido.');
@@ -369,16 +368,14 @@
             if (!c) fail('Caja desconocida.', 'unknown_case');
             return c;
         });
-        const bots = pickBots(r, mode.seats - 1, p.botNames);
+        return { modeKey, mode, crazy, caseList };
+    }
 
-        const s = prepare(state, r);
-        const costCents = caseList.reduce((sum, c) => sum + toCents(c.price), 0);
-        if (toCents(s.balance) < costCents) fail('Saldo insuficiente.', 'insufficient_balance');
-        const potSize = caseList.length * mode.seats;
-        ensureRoom(s, potSize);
-
-        const seats = [{ name: 'Tú', isUser: true, team: mode.teams[0] }]
-            .concat(bots.map((name, i) => ({ name, isUser: false, team: mode.teams[i + 1] })));
+    // Rolls every round for every seat, sums the totals per seat / team and picks the winning team.
+    // `r` is an already wrapped rng. Consumes it in a fixed order (all rolls, then the tiebreak).
+    function resolveParsed(cfg, seatList, r) {
+        const { mode, crazy, caseList } = cfg;
+        const seats = seatList.map((seat, i) => Object.assign({}, seat, { team: mode.teams[i] }));
 
         // rounds[r][seat] = dropped skin
         const rounds = caseList.map(c => seats.map(() => {
@@ -396,8 +393,55 @@
         teamsC.forEach((t, i) => { if (t === best) leaders.push(i); });
         const tiebreak = leaders.length > 1;
         const winnerTeam = tiebreak ? leaders[Math.floor(r() * leaders.length)] : leaders[0];
-        const won = winnerTeam === seats[0].team;
         const potCents = totalsC.reduce((a, b) => a + b, 0);
+
+        return {
+            mode: cfg.modeKey,
+            crazy,
+            caseIds: caseList.map(c => c.id),
+            seats,
+            rounds,
+            totals: totalsC.map(fromCents),
+            teams: teamsC.map(fromCents),
+            leaders,
+            tiebreak,
+            winnerTeam,
+            pot: fromCents(potCents),
+            potCents
+        };
+    }
+
+    /*
+     * Pure battle resolution shared by the bots battle (battle) and the player lobbies
+     * (lib/lobbies.js): { caseIds, mode, crazy, seats } + rng -> transcript
+     * { mode, crazy, caseIds, seats, rounds, totals, teams, leaders, tiebreak, winnerTeam, pot, potCents }.
+     * `seats` is one free-form object per seat (name, steamId, ...); the team is added from the mode.
+     */
+    function resolveBattle(config, rng) {
+        const r = rngOf(rng);
+        const p = objParams(config);
+        const cfg = parseBattleConfig(p);
+        if (!Array.isArray(p.seats) || p.seats.length !== cfg.mode.seats) fail('Número de plazas inválido.');
+        p.seats.forEach(s => { if (!s || typeof s !== 'object') fail('Plaza inválida.'); });
+        return resolveParsed(cfg, p.seats, r);
+    }
+
+    function battle(state, params, rng, now) {
+        const r = rngOf(rng);
+        const p = objParams(params);
+        const cfg = parseBattleConfig(p);
+        const { mode, crazy, caseList } = cfg;
+        const bots = pickBots(r, mode.seats - 1, p.botNames);
+
+        const s = prepare(state, r);
+        const costCents = caseList.reduce((sum, c) => sum + toCents(c.price), 0);
+        if (toCents(s.balance) < costCents) fail('Saldo insuficiente.', 'insufficient_balance');
+        const potSize = caseList.length * mode.seats;
+        ensureRoom(s, potSize);
+
+        const seatList = [{ name: 'Tú', isUser: true }].concat(bots.map(name => ({ name, isUser: false })));
+        const res = resolveParsed(cfg, seatList, r);
+        const won = res.winnerTeam === res.seats[0].team;
 
         s.balance = fromCents(toCents(s.balance) - costCents);
         addCents(s, 'totalSpent', costCents);
@@ -405,9 +449,9 @@
         const items = [];
         if (won) {
             const ts = now || Date.now();
-            addCents(s, 'totalWon', potCents);
+            addCents(s, 'totalWon', res.potCents);
             let k = 0;
-            rounds.forEach((row, ri) => row.forEach(drop => {
+            res.rounds.forEach((row, ri) => row.forEach(drop => {
                 const entry = addItem(s, drop.id, r);
                 s.stats.rarityDrops[entry.rarity] += 1;
                 pushHistory(s, entry, 'Batalla: ' + caseList[ri].name, ts + k++);
@@ -418,18 +462,18 @@
         return {
             state: s,
             result: {
-                mode: modeKey,
+                mode: res.mode,
                 crazy,
-                caseIds: caseList.map(c => c.id),
-                seats,
-                rounds,
-                totals: totalsC.map(fromCents),
-                teams: teamsC.map(fromCents),
-                leaders,
-                tiebreak,
-                winnerTeam,
+                caseIds: res.caseIds,
+                seats: res.seats,
+                rounds: res.rounds,
+                totals: res.totals,
+                teams: res.teams,
+                leaders: res.leaders,
+                tiebreak: res.tiebreak,
+                winnerTeam: res.winnerTeam,
                 won,
-                pot: fromCents(potCents),
+                pot: res.pot,
                 cost: fromCents(costCents),
                 items
             }
@@ -455,6 +499,7 @@
     return {
         actions,
         openCase, sellItems, upgrade, battle, redeemPromo,
+        resolveBattle, parseBattleConfig,
         normalizeState,
         defaultState,
         upgradeChance,

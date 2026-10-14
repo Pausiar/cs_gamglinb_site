@@ -1,0 +1,516 @@
+/* ==================== PVP BATTLES (js/lobbies.js) ====================
+ * Builds on css/battles.css (panels, seats, reels, results); only what is specific to
+ * lobbies lives here. */
+
+.battles-root[hidden] {
+    display: none;
+}
+
+/* ---------- Mode switch ---------- */
+.battles-modes {
+    display: inline-flex;
+    gap: 6px;
+    padding: 5px;
+    margin: 0 auto 24px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    max-width: 100%;
+}
+
+.battles-section > .battles-modes {
+    display: flex;
+    width: fit-content;
+}
+
+.battles-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    white-space: nowrap;
+}
+
+.battles-mode-btn:hover {
+    color: var(--text-primary);
+}
+
+.battles-mode-btn.is-active {
+    background: linear-gradient(135deg, var(--accent-primary), #ff8c5a);
+    color: #fff;
+    box-shadow: var(--shadow-glow);
+}
+
+.battles-mode-btn:focus-visible {
+    outline: 2px solid var(--accent-secondary);
+    outline-offset: 2px;
+}
+
+/* ---------- Toolbar + list ---------- */
+.lb-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.lb-toolbar-text {
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.lb-toolbar-text h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.lb-toolbar-text h3 i {
+    color: var(--accent-primary);
+    margin-right: 6px;
+}
+
+.lb-new-btn {
+    width: auto;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+.lb-login-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(247, 201, 75, 0.08);
+    border: 1px solid rgba(247, 201, 75, 0.25);
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.lb-login-note i {
+    color: var(--accent-secondary);
+    margin-right: 4px;
+}
+
+.lb-login-note a {
+    color: var(--accent-secondary);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lb-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) auto minmax(150px, auto);
+    align-items: center;
+    gap: 18px;
+    padding: 14px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.lb-card:hover {
+    border-color: rgba(255, 107, 53, 0.45);
+}
+
+.lb-card.is-open { border-left-color: #4ade80; }
+.lb-card.is-running { border-left-color: var(--accent-secondary); }
+.lb-card.is-finished { border-left-color: var(--text-muted); }
+.lb-card.is-mine { background: linear-gradient(90deg, rgba(255, 107, 53, 0.1), var(--bg-tertiary) 60%); }
+
+.lb-card-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.lb-card-badges,
+.lb-room-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lb-status {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-secondary);
+}
+
+.lb-status--open { background: rgba(74, 222, 128, 0.14); color: #4ade80; }
+.lb-status--running { background: rgba(247, 201, 75, 0.14); color: var(--accent-secondary); }
+.lb-status--cancelled { background: rgba(235, 75, 75, 0.14); color: var(--rarity-covert); }
+
+.lb-card-cases,
+.lb-room-cases {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.lb-case-thumb {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.lb-case-thumb img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.lb-case-thumb b {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    background: var(--accent-primary);
+    color: #fff;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.lb-case-more {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.lb-card-winner {
+    font-size: 13px;
+    color: var(--accent-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lb-card-seats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lb-dot {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.lb-dot .battle-avatar {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+}
+
+.lb-dot.is-me .battle-avatar {
+    box-shadow: 0 0 0 2px var(--bg-tertiary), 0 0 0 4px var(--accent-primary);
+}
+
+.lb-dot--empty {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.lb-card-side {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 0;
+}
+
+.lb-card-cost {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.lb-card-cost b {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    color: var(--accent-secondary);
+}
+
+.lb-join-btn {
+    padding: 11px 14px;
+    font-size: 12px;
+}
+
+.lb-empty {
+    text-align: center;
+    padding: 30px 10px;
+    color: var(--text-secondary);
+}
+
+.lb-empty i {
+    font-size: 34px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.lb-muted {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ---------- Room ---------- */
+.lb-backbar {
+    display: flex;
+}
+
+.lb-back {
+    padding: 4px 0;
+}
+
+.lb-room-head {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lb-room-count {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.lb-room-cost {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.lb-room-cost b {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    color: var(--accent-secondary);
+}
+
+.lb-waiting-seats .lb-seat {
+    min-height: 150px;
+    justify-content: center;
+}
+
+.lb-seat--empty {
+    align-items: center;
+    text-align: center;
+    border-style: dashed;
+    background: transparent;
+}
+
+.lb-slot-big {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    color: var(--text-muted);
+}
+
+.lb-seat-wait {
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lb-seat-wait small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.lb-seat-join {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.lb-seat-status {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lb-seat-status.is-ready { color: #4ade80; }
+.lb-seat-status.is-wait { color: var(--accent-secondary); }
+
+.lb-room-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.lb-room-actions .battle-secondary-btn {
+    width: auto;
+    flex: 1 1 200px;
+}
+
+.lb-danger:hover {
+    border-color: var(--rarity-covert);
+    color: var(--rarity-covert);
+}
+
+.lb-room-foot .battle-note {
+    margin-top: 0;
+}
+
+.lb-avatar-img {
+    object-fit: cover;
+    background: var(--bg-tertiary);
+    color: transparent;
+}
+
+/* ---------- Countdown ---------- */
+.lb-countdown {
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    color: var(--accent-primary);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.lb-countdown[hidden] {
+    display: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .lb-card {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .lb-card-side {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .lb-card-side .lb-join-btn {
+        width: auto;
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 600px) {
+    .battles-section > .battles-modes {
+        width: 100%;
+    }
+
+    .battles-mode-btn {
+        flex: 1;
+        padding: 11px 8px;
+        font-size: 12px;
+        gap: 6px;
+    }
+
+    .lb-new-btn {
+        width: 100%;
+    }
+
+    .lb-card {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .lb-card-seats {
+        flex-wrap: wrap;
+    }
+
+    .lb-card-side {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lb-card-side .lb-join-btn {
+        width: 100%;
+    }
+
+    .lb-case-thumb {
+        width: 38px;
+        height: 38px;
+    }
+
+    .lb-case-thumb img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .lb-waiting-seats .lb-seat {
+        min-height: 0;
+    }
+
+    .lb-slot-big {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .lb-seat-join {
+        padding: 9px 6px;
+        font-size: 11px;
+    }
+
+    .lb-seat-wait {
+        font-size: 12px;
+    }
+
+    .lb-countdown {
+        font-size: 13px;
+    }
+}
