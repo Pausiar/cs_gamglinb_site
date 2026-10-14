@@ -1,7 +1,8 @@
 // Case battles against bots. Renders into #battlesRoot.
 // Every seat opens the same case each round; the highest total (lowest in
-// "Modo Crazy") wins every item opened in the battle. Drops are rolled with
-// SkinDrop.rollItem when the battle starts; the reels only reveal them.
+// "Modo Crazy") wins every item opened in the battle. The whole battle is
+// decided and paid out by SkinDrop.actions.battle (server for Steam users, the
+// local engine for guests) before the first reel spins; the reels only reveal it.
 (function () {
     'use strict';
 
@@ -36,7 +37,8 @@
         selection: new Map(), // caseId -> qty (insertion order = round order)
         mode: '1v1',
         crazy: false,
-        fast: readFast()
+        fast: readFast(),
+        starting: false
     };
     let battle = null; // current or last battle
     const recent = []; // battles finished this session
@@ -301,38 +303,41 @@
     }
 
     // ==================== BATTLE START ====================
-    function createBattle(config, bots) {
-        const mode = MODES[config.mode];
-        const caseList = config.rounds.map(findCase).filter(Boolean);
-        if (!caseList.length) return null;
-
-        const botList = bots && bots.length === mode.seats - 1 ? bots : makeBots(mode.seats - 1);
-        const seats = [{ name: 'Tú', isUser: true, team: mode.teams[0] }]
-            .concat(botList.map((b, i) => ({ name: b.name, color: b.color, isUser: false, team: mode.teams[i + 1] })));
-
-        // All drops are decided now with the site's weighted roll
-        const rolls = caseList.map(c => seats.map(() => api().rollItem(c.items)));
+    // Builds the client-side battle from the authoritative transcript
+    function createBattle(res, bots, reveal) {
+        const mode = MODES[res.mode];
+        const caseList = res.caseIds.map(findCase);
+        const colorOf = new Map(bots.map(b => [b.name, b.color]));
+        const fallback = shuffle(BOT_COLORS);
+        const seats = res.seats.map((s, i) => ({
+            name: s.name,
+            isUser: !!s.isUser,
+            team: s.team,
+            color: s.isUser ? null : (colorOf.get(s.name) || fallback[i % fallback.length])
+        }));
+        const rolls = res.rounds.map(row => row.map(item => api().hydrate(item)));
 
         return {
-            config: { mode: config.mode, crazy: config.crazy, rounds: caseList.map(c => c.id) },
-            bots: botList,
+            config: { mode: res.mode, crazy: res.crazy, rounds: res.caseIds.slice() },
+            bots: seats.filter(s => !s.isUser).map(s => ({ name: s.name, color: s.color })),
             mode,
             cases: caseList,
             seats,
             rolls,
-            cost: money(caseList.reduce((s, c) => s + c.price, 0)),
+            outcome: res,
+            reveal,
+            cost: res.cost,
             revealed: 0,
             timer: null,
-            stateRef: null,
             settled: false,
             result: null
         };
     }
 
-    function startBattle(config, bots) {
+    async function startBattle(config, bots) {
         const sd = api();
         if (!sd) return;
-        if (isRunning()) {
+        if (isRunning() || ui.starting) {
             sd.showToast('Ya hay una batalla en curso', 'error');
             return;
         }
@@ -344,26 +349,40 @@
             sd.showToast('Añade al menos una caja', 'error');
             return;
         }
-        const b = createBattle(config, bots);
-        if (!b) {
+        const mode = MODES[config.mode];
+        const caseList = config.rounds.map(findCase).filter(Boolean);
+        if (!mode || caseList.length !== config.rounds.length) {
             sd.showToast('No se pudo crear la batalla', 'error');
             return;
         }
-        const state = sd.state;
-        if (state.balance < b.cost) {
+        if (sd.state.balance < money(caseList.reduce((s, c) => s + c.price, 0))) {
             sd.showToast('Saldo insuficiente', 'error');
             return;
         }
+        const botList = bots && bots.length === mode.seats - 1 ? bots : makeBots(mode.seats - 1);
 
-        // Pay the user's seat up front
-        state.balance = money(state.balance - b.cost);
-        state.stats.totalSpent = money(state.stats.totalSpent + b.cost);
-        state.stats.casesOpened += b.cases.length;
-        b.stateRef = state;
+        // The battle is rolled, paid and settled by the action; winnings stay hidden until revealed
+        ui.starting = true;
+        root.querySelectorAll('[data-action="start"], [data-action="rematch"]').forEach(b => { b.disabled = true; });
+        let out;
+        try {
+            out = await sd.actions.battle({
+                caseIds: caseList.map(c => c.id),
+                mode: config.mode,
+                crazy: !!config.crazy,
+                botNames: botList.map(b => b.name)
+            });
+        } catch (e) {
+            sd.showToast(e.message, 'error');
+            root.querySelectorAll('[data-action="start"], [data-action="rematch"]').forEach(b => { b.disabled = false; });
+            if (ui.view === 'creator') renderSummary();
+            return;
+        } finally {
+            ui.starting = false;
+        }
+
+        const b = createBattle(out.result, botList, out.reveal);
         battle = b;
-        sd.saveState();
-        sd.updateUI();
-        sd.renderCases();
 
         ui.view = 'arena';
         renderArena();
@@ -599,57 +618,30 @@
     }
 
     // ==================== SETTLEMENT ====================
-    // Applies the outcome to the player's state exactly once.
+    // The outcome was settled when the battle was created; this only reveals it (once).
     function settle(b) {
         if (!b || b.settled) return;
         b.settled = true;
         clearTimeout(b.timer);
 
-        const sd = api();
-        const totals = seatTotals(b, b.cases.length);
-        const teams = teamTotals(b, totals);
-        const leaders = pickLeaders(b, teams);
-        const tiebreak = leaders.length > 1;
-        const winnerTeam = leaders[Math.floor(Math.random() * leaders.length)];
-        const userTeam = b.seats[0].team;
-        const won = winnerTeam === userTeam;
-
-        const items = [];
-        b.rolls.forEach((row, r) => row.forEach(item => items.push({ item, caseName: b.cases[r].name })));
-        const pot = money(items.reduce((s, x) => s + x.item.price, 0));
-
-        if (won && sd) {
-            const state = sd.state;
-            const now = Date.now();
-            state.stats.totalWon = money(state.stats.totalWon + pot);
-            items.forEach(({ item, caseName }, k) => {
-                const rarity = rarityOf(item);
-                if (state.stats.rarityDrops[rarity] === undefined) state.stats.rarityDrops[rarity] = 0;
-                state.stats.rarityDrops[rarity]++;
-                state.history.push({
-                    id: item.id,
-                    name: item.name,
-                    price: item.price,
-                    image: item.image,
-                    rarity,
-                    caseName: 'Batalla: ' + caseName,
-                    timestamp: now + k
-                });
-            });
-            items.forEach(({ item }) => sd.addToInventory(item));
-            sd.saveState();
-            sd.updateUI();
-            sd.renderCases();
-        }
-
-        b.result = { totals, teams, winnerTeam, tiebreak, tied: leaders, won, pot };
+        const res = b.outcome;
+        b.reveal();   // winnings become visible in the inventory / history
+        b.result = {
+            totals: res.totals,
+            teams: res.teams,
+            winnerTeam: res.winnerTeam,
+            tiebreak: res.tiebreak,
+            tied: res.leaders,
+            won: res.won,
+            pot: res.pot
+        };
         recent.unshift({
             mode: b.config.mode,
             crazy: b.config.crazy,
             rounds: b.cases.length,
             cost: b.cost,
-            won,
-            value: pot
+            won: res.won,
+            value: res.pot
         });
         if (recent.length > RECENT_LIMIT) recent.length = RECENT_LIMIT;
     }
@@ -794,11 +786,13 @@
 
     function onStateChange() {
         if (!root) return;
-        // Profile switched mid-battle: finish it right away so nothing is left pending
-        if (isRunning() && battle.stateRef && api().state !== battle.stateRef) {
-            skipBattle();
-        }
         if (ui.view === 'creator') renderSummary();
+    }
+
+    // Login / logout mid-battle: the battle is already settled on the old
+    // profile, just finish the animation right away
+    function onProfileChange() {
+        if (root && isRunning()) skipBattle();
     }
 
     // Broken skin/case images fall back to the site's placeholder art
@@ -813,11 +807,6 @@
         if (fallback) img.src = fallback;
     }
 
-    // Settle before the page goes away so paid battles always pay out
-    function onPageHide() {
-        if (isRunning()) settle(battle);
-    }
-
     function init() {
         root = document.getElementById('battlesRoot');
         if (!root || !api()) return;
@@ -825,20 +814,7 @@
         root.addEventListener('change', onChange);
         root.addEventListener('error', onImageError, true);
         document.addEventListener('skindrop:statechange', onStateChange);
-        window.addEventListener('pagehide', onPageHide);
-        window.addEventListener('beforeunload', onPageHide);
-
-        // Finish a running battle on the current profile before switching profiles
-        const sd = api();
-        const originalSwitch = sd.switchProfile;
-        if (typeof originalSwitch === 'function') {
-            try {
-                sd.switchProfile = function () {
-                    if (isRunning()) skipBattle();
-                    return originalSwitch.apply(this, arguments);
-                };
-            } catch (e) { /* read-only API */ }
-        }
+        document.addEventListener('skindrop:profilechange', onProfileChange);
 
         renderCreator();
     }

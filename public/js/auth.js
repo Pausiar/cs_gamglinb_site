@@ -27,13 +27,21 @@
         }
     }
 
+    // Logged in: the economy runs on the server (/api/state + /api/*).
+    // Logged out: back to the local guest profile (localStorage).
     function switchProfile(steamId) {
-        if (window.SkinDrop && typeof window.SkinDrop.switchProfile === 'function') {
-            try {
-                window.SkinDrop.switchProfile(steamId);
-            } catch (e) {
-                console.error('[auth] switchProfile falló', e);
+        const sd = window.SkinDrop;
+        if (!sd) return;
+        try {
+            if (steamId && typeof sd.setServerMode === 'function') {
+                sd.setServerMode(steamId);
+            } else if (!steamId && typeof sd.useGuestMode === 'function') {
+                sd.useGuestMode();
+            } else if (typeof sd.switchProfile === 'function') {
+                sd.switchProfile(steamId);
             }
+        } catch (e) {
+            console.error('[auth] cambio de perfil falló', e);
         }
     }
 

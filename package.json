@@ -2,13 +2,15 @@
   "name": "skindrop",
   "version": "1.0.0",
   "private": true,
-  "description": "SkinDrop - apertura de cajas CS2 con inicio de sesión de Steam",
+  "description": "SkinDrop - apertura de cajas CS2 con inicio de sesión de Steam y economía en servidor",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "smoke": "node scripts/psdb-smoke.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "license": "UNLICENSED"
 }

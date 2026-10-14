@@ -1,6 +1,7 @@
 // Upgrader: risk inventory skins (and/or balance) for a chance at a more valuable skin.
 // Renders into #upgraderRoot. Depends on globals from data.js (skins, getRarity, getRarityColor)
-// and on window.SkinDrop from app.js (state, saveState, updateUI, addToInventory, ...).
+// and on window.SkinDrop from app.js (state, actions.upgrade, showToast, ...).
+// The outcome is decided by SkinDrop.actions.upgrade (server or local engine); this file only animates it.
 (function () {
     'use strict';
 
@@ -498,7 +499,7 @@
         if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest' });
     }
 
-    function startUpgrade() {
+    async function startUpgrade() {
         if (ui.spin || ui.settling) return;
         pruneSelection();
         const v = view();
@@ -508,37 +509,35 @@
             renderDial();
             return;
         }
-        const items = selectedItems();
-        if (v.bal > round2(st().balance) + 1e-9) {
-            sd().showToast('Saldo insuficiente', 'error');
-            return;
-        }
+        const uids = selectedItems().map(i => i.uid);
 
-        // Roll up front: the outcome is fixed (and stored) before anything is spent
-        const roll = Math.random() * 100;
-        const win = v.mode === 'over' ? roll >= round2(100 - v.chance) : roll < v.chance;
-        const target = { id: v.target.id, name: v.target.name, price: v.target.price, image: v.target.image };
-
-        ui.spin = { view: Object.assign({}, v), roll, win };
+        // Lock the UI while the outcome is decided (server for Steam users, local engine for guests).
+        // The stake is taken and the outcome stored atomically by the action; the won skin stays
+        // hidden until the needle stops (reveal), so a reload mid-spin cannot change anything.
+        ui.spin = { view: Object.assign({}, v), roll: null, win: null };
         ui.hold = null;
         ui.result = null;
         els.result.innerHTML = '';
         els.dialWrap.classList.remove('upg-win', 'upg-lose');
+        renderDial();
 
-        // Persist the pending outcome, then take the stake. Doing this at the START of the spin means a page
-        // reload mid-animation cannot be used to get the stake back; on reload the stored outcome is settled
-        // (see settlePending) instead of being lost.
-        const state = st();
-        state.pendingUpgrade = { target, win, roll, chance: v.chance, mode: v.mode, stake: v.stake, itemCount: items.length, itemsVal: v.itemsVal };
-        items.forEach(it => sd().removeFromInventory(it.uid));
-        state.balance = round2(state.balance - v.bal);
-        // Stats choice (kept simple): everything staked counts as spent, so profit = totalWon - totalSpent
-        // stays correct. Staked skins were already counted in totalWon when they dropped, so consuming them
-        // is booked as spend; a win then adds the target's price to totalWon.
-        state.stats.totalSpent = round2(state.stats.totalSpent + v.stake);
-        sd().saveState();
+        let out;
+        try {
+            out = await sd().actions.upgrade({ uids, balanceStake: v.bal, targetId: v.target.id, mode: v.mode });
+        } catch (e) {
+            ui.spin = null;
+            sd().showToast(e.message, 'error');
+            renderAll();
+            return;
+        }
+        const r = out.result;
+        ui.spin.view.chance = r.chance;
+        ui.spin.roll = r.roll;
+        ui.spin.win = r.win;
+        ui.spin.outcome = r;
+        ui.spin.reveal = out.reveal;
 
-        // Lock the UI and clear the picker selection
+        // Clear the picker selection (the staked skins are gone)
         ui.selected.clear();
         ui.balanceStake = 0;
         els.balInput.value = '';
@@ -546,10 +545,8 @@
         renderStakeSummary();
         renderTargets();
         renderDial();
-        sd().updateUI();       // header balance / inventory / stats (statechange is ignored while spinning)
-        sd().renderCases();
 
-        animateNeedle(roll);
+        animateNeedle(r.roll);
         setTimeout(() => finishUpgrade(), SPIN_MS + 150);
     }
 
@@ -565,44 +562,25 @@
         els.needle.style.transform = 'rotate(' + finalAngle + 'deg)';
     }
 
-    // Applies the stored outcome of an upgrade: award the target on a win, then clear the pending flag
-    function settlePending() {
-        const state = st();
-        const p = state.pendingUpgrade;
-        if (!p) return null;
+    function finishUpgrade() {
+        const spin = ui.spin;
+        if (!spin || !spin.outcome) { ui.spin = null; renderAll(); return; }
+        const r = spin.outcome;
         ui.settling = true;
         try {
-            delete state.pendingUpgrade;
-            let entry = null;
-            if (p.win) {
-                const rarity = rarityOf(p.target);
-                state.stats.totalWon = round2(state.stats.totalWon + p.target.price);
-                state.history.push(Object.assign({}, p.target, { rarity, caseName: 'Upgrader', timestamp: Date.now() }));
-                entry = sd().addToInventory(p.target);   // saves + updateUI
-            } else {
-                sd().saveState();
-                sd().updateUI();
-            }
-            sd().renderCases();
-            return { p, entry };
+            spin.reveal();      // show the won skin in the inventory / history
         } finally {
             ui.settling = false;
         }
-    }
-
-    function finishUpgrade() {
-        const spin = ui.spin;
-        const settled = settlePending();
         ui.spin = null;
-        if (!settled || !spin) { renderAll(); return; }
-        const { p } = settled;
+        const target = Object.assign({}, r.target, { image: sd().itemImage(r.target) });
         ui.hold = spin.view;
-        ui.result = { win: p.win, roll: p.roll, target: p.target, stake: p.stake, itemCount: p.itemCount };
+        ui.result = { win: r.win, roll: r.roll, target, stake: r.stake, itemCount: r.itemCount };
         renderAll();
         showResult(ui.result);
-        celebrate(p.win, rarityOf(p.target));
-        if (p.win) sd().showToast('¡Upgrade conseguido! Ganaste ' + p.target.name + ' (' + money(p.target.price) + ')', 'success');
-        else sd().showToast('Upgrade fallido. Perdiste ' + money(p.stake) + ' apostados', 'error');
+        celebrate(r.win, rarityOf(target));
+        if (r.win) sd().showToast('¡Upgrade conseguido! Ganaste ' + target.name + ' (' + money(target.price) + ')', 'success');
+        else sd().showToast('Upgrade fallido. Perdiste ' + money(r.stake) + ' apostados', 'error');
     }
 
     function showResult(r) {
@@ -701,17 +679,17 @@
     // Inventory / balance changed elsewhere: refresh the picker (but never mid-animation)
     function onStateChange() {
         if (!root || ui.spin || ui.settling) return;
-        if (st().pendingUpgrade) {
-            // An upgrade was interrupted (reload / profile switch): settle its stored outcome
-            const settled = settlePending();
-            if (settled) {
-                const p = settled.p;
-                sd().showToast(p.win ? 'Upgrade pendiente resuelto: ¡ganaste ' + p.target.name + '!' : 'Upgrade pendiente resuelto: no hubo suerte', p.win ? 'success' : 'error');
-            }
-            renderAll();   // settlePending's own updateUI is ignored (ui.settling)
-            return;
-        }
         renderAll();
+    }
+
+    // Profile switched (login / logout): forget the selection of the old profile
+    function onProfileChange() {
+        if (!root) return;
+        ui.selected.clear();
+        ui.balanceStake = 0;
+        if (els.balInput) els.balInput.value = '';
+        ui.hold = null;
+        if (!ui.spin) renderAll();
     }
 
     // ==================== INIT ====================
@@ -724,11 +702,8 @@
         root.addEventListener('input', onInput);
         root.addEventListener('change', onInput);
         document.addEventListener('skindrop:statechange', onStateChange);
-        if (st().pendingUpgrade) {
-            onStateChange();
-        } else {
-            renderAll();
-        }
+        document.addEventListener('skindrop:profilechange', onProfileChange);
+        renderAll();
     }
 
     if (document.readyState === 'loading') {

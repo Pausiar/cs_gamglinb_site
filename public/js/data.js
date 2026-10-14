@@ -239,10 +239,11 @@ function getItemChances(items) {
     });
 }
 
-// Picks an item from a case using getItemChances
-function rollItem(items) {
+// Picks an item from a case using getItemChances. `rng` returns a float in [0, 1)
+// (Math.random in the browser, a crypto-based generator on the server).
+function rollItem(items, rng) {
     const chances = getItemChances(items);
-    let rand = Math.random() * 100;
+    let rand = (typeof rng === 'function' ? rng() : Math.random()) * 100;
     for (let i = 0; i < items.length; i++) {
         rand -= chances[i];
         if (rand < 0) return items[i];
@@ -278,4 +279,12 @@ function getRarityColor(rarity) {
         gold: '#ffd700'
     };
     return colors[rarity] || colors.consumer;
+}
+
+// Node (server / tests): the same catalog is shared with js/engine.js via require()
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        skins, cases, dropChances, getItemChances, rollItem, formatChance, getRarity, getRarityColor,
+        SKIN_PLACEHOLDER, CASE_PLACEHOLDER
+    };
 }

@@ -1,80 +1,263 @@
 // ==================== APP STATE ====================
-let state = {
-    balance: 0,
-    inventory: [],
-    stats: {
-        casesOpened: 0,
-        totalSpent: 0,
-        totalWon: 0,
-        rarityDrops: {
-            consumer: 0,
-            industrial: 0,
-            milspec: 0,
-            restricted: 0,
-            classified: 0,
-            covert: 0,
-            gold: 0
-        }
-    },
-    history: [],
-    currentCase: null,
-    isSpinning: false
-};
+// Two copies of the profile:
+//  - `auth`: the authoritative state (engine format, no images). For guests it
+//    lives in localStorage; for Steam users it is whatever the server returned.
+//  - `state`: what the UI shows (items hydrated with images). While an
+//    animation is running, the items it is about to reveal are hidden (see holds).
+const Engine = window.SkinDropEngine;
+const GUEST_KEY = 'skinDropState';
 
-// localStorage key; switches per Steam profile (see switchProfile)
-let storageKey = 'skinDropState';
+let auth = Engine.defaultState();
+let state = null;            // set right below, once the holds exist
+let mode = 'guest';          // 'guest' | 'server'
+let serverSteamId = null;
+let profileSeq = 0;          // bumps on every profile switch (drops stale responses)
 
-function defaultState() {
+// ---------- images ----------
+const skinImages = new Map();
+Object.values(skins).forEach(list => list.forEach(s => skinImages.set(s.id, s.image)));
+
+function itemImage(item) {
+    return (item && skinImages.get(item.id)) || SKIN_PLACEHOLDER;
+}
+
+function hydrate(item) {
+    return Object.assign({}, item, { image: itemImage(item) });
+}
+
+// ---------- holds: hide not-yet-revealed results ----------
+const holds = new Map(); // token -> { uids:Set, stats, timer }
+let holdSeq = 0;
+
+function hiddenUids() {
+    const out = new Set();
+    holds.forEach(h => h.uids.forEach(u => out.add(u)));
+    return out;
+}
+
+function addHold(uids, statsBefore) {
+    const token = ++holdSeq;
+    const hold = { uids: new Set(uids), stats: statsBefore, timer: null };
+    // Safety net: never keep things hidden forever
+    hold.timer = setTimeout(() => releaseHold(token), 120000);
+    holds.set(token, hold);
+    return () => releaseHold(token);
+}
+
+function releaseHold(token) {
+    const h = holds.get(token);
+    if (!h) return;
+    clearTimeout(h.timer);
+    holds.delete(token);
+    refreshDisplay();
+}
+
+function clearHolds() {
+    holds.forEach(h => clearTimeout(h.timer));
+    holds.clear();
+}
+
+function displayFrom(src, prev) {
+    const hidden = hiddenUids();
+    const first = holds.size ? holds.values().next().value : null;
+    const stats = first ? first.stats : src.stats;
     return {
-        balance: 0,
-        inventory: [],
-        stats: {
-            casesOpened: 0,
-            totalSpent: 0,
-            totalWon: 0,
-            rarityDrops: { consumer: 0, industrial: 0, milspec: 0, restricted: 0, classified: 0, covert: 0, gold: 0 }
-        },
-        history: [],
-        currentCase: null,
-        isSpinning: false
+        balance: src.balance,
+        inventory: src.inventory.filter(i => !hidden.has(i.uid)).map(hydrate),
+        stats: Object.assign({}, stats, { rarityDrops: Object.assign({}, stats.rarityDrops) }),
+        history: src.history.filter(h => !h.uid || !hidden.has(h.uid)).map(hydrate),
+        currentCase: prev ? prev.currentCase : null,
+        isSpinning: prev ? prev.isSpinning : false
     };
 }
 
-// Load state from localStorage, filling in fields missing from older saves
-function loadState() {
-    const base = defaultState();
+state = displayFrom(auth, null);
+
+function refreshDisplay() {
+    state = displayFrom(auth, state);
+    updateUI();
+    renderCases(currentFilter);
+}
+
+// ---------- persistence ----------
+// Guest saves from older versions may hold an unsettled upgrade: settle it once.
+function settleLegacyPending(saved) {
+    const p = saved && saved.pendingUpgrade;
+    if (!p) return saved;
+    delete saved.pendingUpgrade;
+    const info = p.win && p.target ? Engine.skinInfo(Number(p.target.id)) : null;
+    if (info) {
+        saved.inventory = (Array.isArray(saved.inventory) ? saved.inventory : []).concat([{ id: info.id }]);
+        saved.stats = saved.stats || {};
+        saved.stats.totalWon = Engine.round2((Number(saved.stats.totalWon) || 0) + info.price);
+        saved.history = (Array.isArray(saved.history) ? saved.history : []).concat([
+            { id: info.id, price: info.price, caseName: 'Upgrader', timestamp: Date.now() }
+        ]);
+    }
+    return saved;
+}
+
+function loadGuestState() {
     let saved = null;
     try {
-        saved = JSON.parse(localStorage.getItem(storageKey));
+        saved = JSON.parse(localStorage.getItem(GUEST_KEY));
     } catch (e) {
         saved = null;
     }
-    state = saved ? { ...base, ...saved, stats: { ...base.stats, ...saved.stats } } : base;
-    state.stats.rarityDrops = { ...base.stats.rarityDrops, ...state.stats.rarityDrops };
-    state.isSpinning = false;
-    state.inventory.forEach(item => { if (!item.uid) item.uid = generateUid(); });
-    updateUI();
+    const s = Engine.normalizeState(settleLegacyPending(saved), Math.random);
+    return s;
 }
 
-// Save state to localStorage
+// Only guests persist locally; Steam profiles live on the server
 function saveState() {
+    if (mode !== 'guest') return;
     try {
-        localStorage.setItem(storageKey, JSON.stringify(state));
+        localStorage.setItem(GUEST_KEY, JSON.stringify(auth));
     } catch (e) {
         // Storage unavailable (private mode, quota); state stays in memory
     }
 }
 
-// Switch to the saved state of a Steam user (null = guest)
-function switchProfile(steamId) {
-    storageKey = steamId ? `skinDropState:${steamId}` : 'skinDropState';
-    loadState();
-    renderCases(currentFilter);
+function setAuth(next) {
+    auth = next;
+    saveState();
+    refreshDisplay();
 }
 
-function generateUid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+function resetSession() {
+    profileSeq++;
+    clearHolds();
+    actionQueue = Promise.resolve();
+    state.isSpinning = false;
+    document.dispatchEvent(new CustomEvent('skindrop:profilechange', { detail: { mode, steamId: serverSteamId } }));
 }
+
+function useGuestMode() {
+    mode = 'guest';
+    serverSteamId = null;
+    resetSession();
+    auth = loadGuestState();
+    saveState();
+    refreshDisplay();
+}
+
+async function fetchServerState(seq) {
+    const resp = await fetch('/api/state', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+        cache: 'no-store'
+    });
+    const json = await resp.json().catch(() => null);
+    if (!resp.ok || !json || !json.state) throw new Error((json && json.error) || 'HTTP ' + resp.status);
+    if (seq !== profileSeq) return;
+    auth = Engine.normalizeState(json.state);
+    refreshDisplay();
+}
+
+// Logged-in Steam user: the server is the source of truth
+async function setServerMode(steamId) {
+    if (!steamId) return useGuestMode();
+    mode = 'server';
+    serverSteamId = String(steamId);
+    resetSession();
+    auth = Engine.defaultState();
+    refreshDisplay();
+    const seq = profileSeq;
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            await fetchServerState(seq);
+            return true;
+        } catch (e) {
+            if (attempt === 0) await new Promise(r => setTimeout(r, 1500));
+            else showToast('No se pudo cargar tu perfil: ' + e.message, 'error');
+        }
+    }
+    return false;
+}
+
+// Back-compat: null = guest, steamId = server profile
+function switchProfile(steamId) {
+    return steamId ? setServerMode(steamId) : useGuestMode();
+}
+
+// ==================== ACTIONS ====================
+// Every economy change goes through here. Returns Promise<{state, result, reveal}>.
+// Logged in -> server API (authoritative); guest -> same engine, locally.
+// Results that an animation reveals later (opened item, upgrade win, battle
+// winnings) stay hidden in the UI until reveal() is called.
+const ACTION_ENDPOINTS = {
+    openCase: '/api/open',
+    sellItems: '/api/sell',
+    upgrade: '/api/upgrade',
+    battle: '/api/battle',
+    redeemPromo: '/api/promo'
+};
+let actionQueue = Promise.resolve();
+
+async function callServer(name, params) {
+    let resp;
+    try {
+        resp = await fetch(ACTION_ENDPOINTS[name], {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(params || {})
+        });
+    } catch (e) {
+        throw new Error('Sin conexión con el servidor. Inténtalo de nuevo.');
+    }
+    const json = await resp.json().catch(() => null);
+    if (!resp.ok || !json) {
+        if (resp.status === 401) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión con Steam.');
+        throw new Error((json && json.error) || 'Error del servidor (' + resp.status + ').');
+    }
+    return json;
+}
+
+function revealUids(name, result) {
+    if (name === 'openCase') return [result.item.uid];
+    if (name === 'upgrade') return result.item ? [result.item.uid] : [];
+    if (name === 'battle') return (result.items || []).map(i => i.uid);
+    return [];
+}
+
+function runAction(name, params, opts) {
+    const holdResult = !!(opts && opts.hold);
+    const job = async () => {
+        const seq = profileSeq;
+        const statsBefore = auth.stats;
+        let out;
+        if (mode === 'server') {
+            out = await callServer(name, params);
+            if (seq !== profileSeq) throw new Error('El perfil ha cambiado.');
+            out = { state: Engine.normalizeState(out.state), result: out.result };
+        } else {
+            try {
+                out = Engine.actions[name](auth, params, Math.random);
+            } catch (e) {
+                throw new Error(e && e.message ? e.message : 'Acción no válida.');
+            }
+        }
+        let reveal = () => {};
+        if (holdResult) {
+            const uids = revealUids(name, out.result);
+            reveal = addHold(uids, statsBefore);
+        }
+        setAuth(out.state);
+        return { state: out.state, result: out.result, reveal };
+    };
+    const run = actionQueue.then(job, job);
+    actionQueue = run.catch(() => {});
+    return run;
+}
+
+const actions = {
+    openCase: params => runAction('openCase', params, { hold: true }),
+    sell: params => runAction('sellItems', params),
+    upgrade: params => runAction('upgrade', params, { hold: true }),
+    battle: params => runAction('battle', params, { hold: true }),
+    promo: params => runAction('redeemPromo', params)
+};
 
 // ==================== UI UPDATES ====================
 function updateUI() {
@@ -286,19 +469,26 @@ balanceModal.addEventListener('click', (e) => {
     }
 });
 
-applyCodeBtn.addEventListener('click', () => {
+let promoBusy = false;
+applyCodeBtn.addEventListener('click', async () => {
     const code = promoCodeInput.value.toLowerCase().trim();
-    
-    if (code === 'test') {
-        state.balance += 10000;
-        saveState();
-        updateUI();
-        renderCases();
-        showToast('¡Código aplicado! +10,000€', 'success');
+    if (!code) {
+        showToast('Código inválido', 'error');
+        return;
+    }
+    if (promoBusy) return;
+    promoBusy = true;
+    applyCodeBtn.disabled = true;
+    try {
+        const { result } = await actions.promo({ code });
+        showToast(`¡Código aplicado! +${result.amount.toLocaleString('es-ES')}€`, 'success');
         promoCodeInput.value = '';
         balanceModal.classList.remove('active');
-    } else {
-        showToast('Código inválido', 'error');
+    } catch (e) {
+        showToast(e.message, 'error');
+    } finally {
+        promoBusy = false;
+        applyCodeBtn.disabled = false;
     }
 });
 
@@ -317,7 +507,7 @@ const contentsGrid = document.getElementById('contentsGrid');
 
 function openCaseModal(caseId) {
     const caseData = cases.find(c => c.id === caseId);
-    if (!caseData) return;
+    if (!caseData || state.isSpinning) return;
     
     if (state.balance < caseData.price) {
         showToast('Saldo insuficiente', 'error');
@@ -330,6 +520,7 @@ function openCaseModal(caseId) {
     openingModal.classList.add('active');
     wonItemDisplay.classList.remove('active');
     rouletteTrack.style.display = 'flex';
+    rouletteTrack.innerHTML = '';
     
     // Update case name
     document.getElementById('openingCaseName').textContent = caseData.name;
@@ -358,18 +549,24 @@ function showCaseContents(caseData) {
     }).join('');
 }
 
-function startCaseOpening(caseData) {
+// The drop is decided (and persisted) by actions.openCase before the roulette
+// spins; the animation only lands on it. The item stays hidden in the
+// inventory/history until the roulette stops.
+async function startCaseOpening(caseData) {
     if (state.isSpinning) return;
     state.isSpinning = true;
     
-    // Deduct balance
-    state.balance -= caseData.price;
-    state.stats.totalSpent += caseData.price;
-    state.stats.casesOpened++;
-    
-    // Determine winner based on chances
-    const winner = determineWinner(caseData.items);
-    const winnerRarity = getRarity(winner);
+    let out;
+    try {
+        out = await actions.openCase({ caseId: caseData.id });
+    } catch (e) {
+        state.isSpinning = false;
+        showToast(e.message, 'error');
+        if (!wonItemDisplay.classList.contains('active')) openingModal.classList.remove('active');
+        return;
+    }
+    const winner = hydrate(out.result.item);
+    const winnerRarity = out.result.rarity;
     
     // Generate roulette items (100 items)
     const rouletteItems = [];
@@ -414,33 +611,15 @@ function startCaseOpening(caseData) {
     
     // Show winner after animation
     setTimeout(() => {
-        showWinner(winner, winnerRarity, caseData);
+        showWinner(winner, winnerRarity, out.reveal);
     }, 5200);
 }
 
-function determineWinner(items) {
-    return rollItem(items);
-}
-
-function showWinner(winner, rarity, caseData) {
+function showWinner(winner, rarity, reveal) {
     state.isSpinning = false;
     
-    // Update stats
-    state.stats.totalWon += winner.price;
-    state.stats.rarityDrops[rarity]++;
-    
-    // Add to history
-    state.history.push({
-        ...winner,
-        rarity: rarity,
-        caseName: caseData.name,
-        timestamp: Date.now()
-    });
-    
-    // Save state
-    saveState();
-    updateUI();
-    renderCases();
+    // The drop is already in the inventory: make it visible now
+    reveal();
     
     // Hide roulette, show winner
     rouletteTrack.style.display = 'none';
@@ -457,38 +636,37 @@ function showWinner(winner, rarity, caseData) {
     const glow = document.querySelector('.won-item-glow');
     glow.style.background = `radial-gradient(circle, ${getRarityColor(rarity)}40 0%, transparent 70%)`;
     
-    // Store winner data for buttons; the drop can be sold or kept only once
-    wonItemDisplay.dataset.winner = JSON.stringify(winner);
-    wonItemDisplay.dataset.rarity = rarity;
+    // Buttons act on this drop once (sell, or keep = leave it in the inventory)
+    wonItemDisplay.dataset.uid = winner.uid;
+    wonItemDisplay.dataset.price = String(winner.price);
     wonItemDisplay.dataset.claimed = '';
 }
 
 // Winner action buttons
-document.getElementById('sellBtn').addEventListener('click', () => {
+document.getElementById('sellBtn').addEventListener('click', async () => {
     if (wonItemDisplay.dataset.claimed) return;
     wonItemDisplay.dataset.claimed = '1';
-    const winner = JSON.parse(wonItemDisplay.dataset.winner);
-    state.balance += winner.price;
-    saveState();
-    updateUI();
-    renderCases();
-    showToast(`Vendido por ${winner.price.toFixed(2)}€`, 'success');
+    try {
+        const { result } = await actions.sell({ uids: [wonItemDisplay.dataset.uid] });
+        showToast(`Vendido por ${result.amount.toFixed(2)}€`, 'success');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 });
 
 document.getElementById('keepBtn').addEventListener('click', () => {
-    if (wonItemDisplay.dataset.claimed) return;
-    wonItemDisplay.dataset.claimed = '1';
-    const winner = JSON.parse(wonItemDisplay.dataset.winner);
-    addToInventory(winner);
-    showToast('Guardado en inventario', 'success');
+    if (!wonItemDisplay.dataset.claimed) {
+        wonItemDisplay.dataset.claimed = '1';
+        showToast('Guardado en inventario', 'success');
+    }
+    openingModal.classList.remove('active');
 });
 
 document.getElementById('openAgainBtn').addEventListener('click', () => {
+    if (state.isSpinning) return;
     if (state.currentCase && state.balance >= state.currentCase.price) {
-        // An unclaimed drop goes to the inventory instead of being lost
-        if (!wonItemDisplay.dataset.claimed) {
-            addToInventory(JSON.parse(wonItemDisplay.dataset.winner));
-        }
+        // An unclaimed drop simply stays in the inventory
+        wonItemDisplay.dataset.claimed = '1';
         wonItemDisplay.classList.remove('active');
         rouletteTrack.style.display = 'flex';
         startCaseOpening(state.currentCase);
@@ -501,7 +679,6 @@ closeOpeningBtn.addEventListener('click', () => {
     if (!state.isSpinning) {
         if (wonItemDisplay.classList.contains('active') && !wonItemDisplay.dataset.claimed) {
             wonItemDisplay.dataset.claimed = '1';
-            addToInventory(JSON.parse(wonItemDisplay.dataset.winner));
             showToast('Guardado en inventario', 'success');
         }
         openingModal.classList.remove('active');
@@ -509,35 +686,14 @@ closeOpeningBtn.addEventListener('click', () => {
 });
 
 // ==================== INVENTORY ACTIONS ====================
-// Adds a skin to the inventory (rarity resolved from data) and returns the stored entry
-function addToInventory(item) {
-    const entry = { id: item.id, name: item.name, price: item.price, image: item.image, rarity: getRarity(item), uid: generateUid() };
-    state.inventory.push(entry);
-    saveState();
-    updateUI();
-    return entry;
-}
-
-// Removes an inventory item by uid and returns it (or null)
-function removeFromInventory(uid) {
-    const index = state.inventory.findIndex(i => i.uid === uid);
-    if (index === -1) return null;
-    const [item] = state.inventory.splice(index, 1);
-    saveState();
-    updateUI();
-    return item;
-}
-
-function sellInventoryItem(uid) {
-    const index = state.inventory.findIndex(i => i.uid === uid);
-    if (index === -1) return;
-    const item = state.inventory[index];
-    state.balance += item.price;
-    state.inventory.splice(index, 1);
-    saveState();
-    updateUI();
-    renderCases();
-    showToast(`Vendido por ${item.price.toFixed(2)}€`, 'success');
+async function sellInventoryItem(uid) {
+    if (!state.inventory.some(i => i.uid === uid)) return;
+    try {
+        const { result } = await actions.sell({ uids: [uid] });
+        showToast(`Vendido por ${result.amount.toFixed(2)}€`, 'success');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
 // ==================== FILTERS ====================
@@ -588,8 +744,9 @@ document.querySelectorAll('.nav-link').forEach(link => {
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
-    loadState();
-    renderCases();
+    // Guest state first; auth.js switches to the server profile after /api/me
+    auth = loadGuestState();
+    refreshDisplay();
     initLiveFeed();
     
     // Update live feed periodically
@@ -599,16 +756,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // Make sellInventoryItem globally accessible
 window.sellInventoryItem = sellInventoryItem;
 
-// Shared API for feature modules (upgrader.js, battles.js, auth.js)
+// Shared API for feature modules (upgrader.js, battles.js, auth.js).
+// `state` is read-only for them: every change goes through `actions`.
 window.SkinDrop = {
     get state() { return state; },
-    saveState,
+    get mode() { return mode; },
+    get steamId() { return serverSteamId; },
+    actions,
     updateUI,
     renderCases: () => renderCases(currentFilter),
     switchProfile,
-    addToInventory,
-    removeFromInventory,
+    setServerMode,
+    useGuestMode,
     showToast,
+    itemImage,
+    hydrate,
     rollItem,
     getItemChances,
     formatChance,
