@@ -249,3 +249,42 @@
         gap: 6px;
     }
 }
+
+/* ==================== RETRY BUTTON (profile could not be loaded) ==================== */
+button.auth-steam-btn {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* ==================== LOADING STATE (js/app.js: html.sd-loading) ==================== */
+/* A logged-in user's server profile is on its way: balance shows "…", actions are refused */
+html.sd-loading #balance {
+    animation: sdLoadingPulse 1s ease-in-out infinite;
+}
+
+html.sd-loading .case-card[data-case-id],
+html.sd-loading .open-btn,
+html.sd-loading .inventory-sell-btn,
+html.sd-loading .apply-code-btn {
+    cursor: progress;
+    opacity: 0.6;
+}
+
+@keyframes sdLoadingPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.sd-loading #balance {
+        animation: none;
+    }
+}
+
+.toast.info {
+    border-left-color: var(--accent-primary);
+}
+
+.toast.info .toast-icon {
+    color: var(--accent-primary);
+}

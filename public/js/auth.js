@@ -7,6 +7,18 @@
     let container = null;
     let currentUser = null;
     let menuOpen = false;
+    let ready = false;   // first /api/me answered
+
+    // sd_hint=1 (non-HttpOnly, set by the server at login / cleared at logout): "a Steam session
+    // probably exists". UX only - app.js shows a loading state instead of the guest profile, and
+    // the signed HttpOnly session cookie stays the only real authentication.
+    function hasHint() {
+        try { return /(?:^|;\s*)sd_hint=1(?:;|$)/.test(document.cookie); } catch (e) { return false; }
+    }
+
+    function clearHint() {
+        try { document.cookie = 'sd_hint=; Path=/; Max-Age=0; SameSite=Lax'; } catch (e) { /* ignore */ }
+    }
 
     function escapeHtml(str) {
         return String(str == null ? '' : str)
@@ -59,6 +71,17 @@
                 <i class="fa-brands fa-steam"></i>
                 <span class="auth-btn-text">Cargando...</span>
             </span>`;
+    }
+
+    // /api/me unreachable while a login hint exists: keep the loading state (never the guest
+    // profile) and let the user retry
+    function renderRetry() {
+        container.innerHTML = `
+            <button type="button" class="auth-steam-btn auth-retry" title="No se pudo cargar tu perfil">
+                <i class="fas fa-rotate-right"></i>
+                <span class="auth-btn-text">Reintentar</span>
+            </button>`;
+        container.querySelector('.auth-retry').addEventListener('click', () => { init(true); });
     }
 
     function renderOffline() {
@@ -152,10 +175,17 @@
             toast('No se pudo cerrar sesión', 'error');
             return;
         }
+        showLoggedOut();
+        toast('Sesión cerrada', 'success');
+    }
+
+    // Back to the guest profile on the same page: no navigation, no reload
+    function showLoggedOut() {
+        clearHint();
         currentUser = null;
+        setMenu(false);
         switchProfile(null);
         renderLoggedOut();
-        toast('Sesión cerrada', 'success');
     }
 
     async function fetchMe() {
@@ -201,40 +231,76 @@
         } catch (e) { /* ignore */ }
     }
 
-    async function init() {
+    async function fetchMeWithRetry(attempts) {
+        let lastError;
+        for (let i = 0; i < attempts; i++) {
+            try {
+                return await fetchMe();
+            } catch (e) {
+                lastError = e;
+                if (i < attempts - 1) await new Promise(r => setTimeout(r, 800 * (i + 1)));
+            }
+        }
+        throw lastError;
+    }
+
+    let listenersBound = false;
+
+    async function init(isRetry) {
         container = document.getElementById('authContainer');
         if (!container) return;
 
-        document.addEventListener('click', (e) => {
-            if (menuOpen && !container.contains(e.target)) setMenu(false);
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && menuOpen) {
-                setMenu(false);
-                const btn = container.querySelector('.auth-user-btn');
-                if (btn) btn.focus();
-            }
-        });
+        if (!listenersBound) {
+            listenersBound = true;
+            document.addEventListener('click', (e) => {
+                if (menuOpen && !container.contains(e.target)) setMenu(false);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && menuOpen) {
+                    setMenu(false);
+                    const btn = container.querySelector('.auth-user-btn');
+                    if (btn) btn.focus();
+                }
+            });
+            // Logged in / out in another tab: follow it when this tab becomes visible again
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState !== 'visible' || !ready) return;
+                if (currentUser && !hasHint()) showLoggedOut();
+                else if (!currentUser && hasHint()) window.location.reload();
+            });
+        }
 
         if (window.location.protocol === 'file:') {
             renderOffline();
             return;
         }
 
+        const hinted = hasHint();
         renderLoading();
         let me;
         try {
-            me = await fetchMe();
+            me = await fetchMeWithRetry(hinted ? 3 : 1);
         } catch (e) {
-            renderOffline();
+            if (hinted) {
+                renderRetry();
+                if (isRetry !== true) toast('No se pudo cargar tu perfil. Comprueba tu conexión.', 'error');
+            } else {
+                renderOffline();
+            }
             return;
         }
+        ready = true;
 
         if (me && me.loggedIn && /^\d{17}$/.test(String(me.steamId))) {
             currentUser = me;
             switchProfile(me.steamId);
             renderLoggedIn(me);
         } else {
+            // Stale hint (session expired / logged out elsewhere): leave the loading state
+            if (hinted) {
+                clearHint();
+                switchProfile(null);
+            }
             renderLoggedOut();
         }
         handleLoginParam(me);
@@ -246,7 +312,7 @@
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', () => { init(); });
     } else {
         init();
     }

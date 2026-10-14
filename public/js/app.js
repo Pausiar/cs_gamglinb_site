@@ -12,6 +12,11 @@ let state = null;            // set right below, once the holds exist
 let mode = 'guest';          // 'guest' | 'server'
 let serverSteamId = null;
 let profileSeq = 0;          // bumps on every profile switch (drops stale responses)
+// Logged-in user whose server profile has not arrived yet: the balance shows "…" and actions are
+// refused (never the guest profile). Triggered by the sd_hint cookie (see the boot code at the
+// bottom) or by setServerMode(); cleared when the server state is in or guest mode starts.
+let profileLoading = false;
+let profileLoadError = '';   // set when the server profile could not be loaded
 
 // ---------- images ----------
 const skinImages = new Map();
@@ -132,9 +137,18 @@ function resetSession() {
     document.dispatchEvent(new CustomEvent('skindrop:profilechange', { detail: { mode, steamId: serverSteamId } }));
 }
 
+// The "…" balance + disabled actions state shown while a logged-in user's profile loads
+function setProfileLoading(on) {
+    profileLoading = on;
+    if (on) profileLoadError = '';
+    document.documentElement.classList.toggle('sd-loading', on);
+    if (on) setText('balance', '…');
+}
+
 function useGuestMode() {
     mode = 'guest';
     serverSteamId = null;
+    setProfileLoading(false);
     resetSession();
     auth = loadGuestState();
     saveState();
@@ -154,6 +168,7 @@ async function setServerMode(steamId) {
     if (!steamId) return useGuestMode();
     mode = 'server';
     serverSteamId = String(steamId);
+    setProfileLoading(true);
     resetSession();
     auth = Engine.defaultState();
     refreshDisplay();
@@ -161,10 +176,18 @@ async function setServerMode(steamId) {
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
             await fetchServerState(seq);
+            if (seq === profileSeq) {
+                setProfileLoading(false);
+                refreshDisplay();   // real balance replaces the "…"
+            }
             return true;
         } catch (e) {
             if (attempt === 0) await new Promise(r => setTimeout(r, 1500));
-            else showToast('No se pudo cargar tu perfil: ' + e.message, 'error');
+            else {
+                // Stay in the loading state (never fall back to a made-up balance)
+                profileLoadError = 'No se pudo cargar tu perfil. Recarga la página.';
+                showToast('No se pudo cargar tu perfil: ' + e.message, 'error');
+            }
         }
     }
     return false;
@@ -844,9 +867,72 @@ initCaseOpening();
 initCasesGrid();
 initInventory();
 
+// ---------- logged-in user: loading state instead of the guest profile ----------
+// The server sets the non-HttpOnly cookie sd_hint=1 at login (and clears it at logout). It only
+// drives the UX - the real authentication is the signed HttpOnly session - so if it is stale,
+// auth.js sees /api/me say "not logged in" and calls useGuestMode().
+function hasLoginHint() {
+    try {
+        return /(?:^|;\s*)sd_hint=1(?:;|$)/.test(document.cookie);
+    } catch (e) {
+        return false;
+    }
+}
+
+function loadingNotice() {
+    showToast(profileLoadError || 'Cargando tu perfil…', profileLoadError ? 'error' : 'info');
+}
+
+// While the profile loads, clicks on anything that could act on the economy (buttons, case cards)
+// outside the header are swallowed with a toast; programmatic callers get a rejected promise.
+const LOADING_BLOCKED = 'button, [role="button"], input[type="submit"], .case-card[data-case-id]';
+const LOADING_ALLOWED = '.header, #authContainer, .filter-btn, .close-modal, [data-allow-loading]';
+
+function installLoadingGuards() {
+    document.addEventListener('click', (e) => {
+        if (!profileLoading || !e.target.closest) return;
+        const hit = e.target.closest(LOADING_BLOCKED);
+        if (!hit || hit.closest(LOADING_ALLOWED)) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        loadingNotice();
+    }, true);
+    document.addEventListener('keydown', (e) => {
+        if (!profileLoading || (e.key !== 'Enter' && e.key !== ' ') || !e.target.closest) return;
+        const hit = e.target.closest(LOADING_BLOCKED);
+        if (!hit || hit.closest(LOADING_ALLOWED)) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        loadingNotice();
+    }, true);
+    // Anything redrawing the header balance meanwhile keeps showing "…"
+    document.addEventListener('skindrop:statechange', () => {
+        if (profileLoading) setText('balance', '…');
+    });
+    Object.keys(actions).forEach((name) => {
+        const run = actions[name];
+        actions[name] = (...args) => {
+            if (!profileLoading) return run(...args);
+            const err = new Error(profileLoadError || 'Cargando tu perfil…');
+            err.code = 'profile_loading';
+            return Promise.reject(err);
+        };
+    });
+}
+
+installLoadingGuards();
+if (hasLoginHint()) {
+    // Never show (or act on) the guest profile: start empty, balance "…", until setServerMode finishes
+    mode = 'server';
+    auth = Engine.defaultState();
+    state = displayFrom(auth, state);
+    setProfileLoading(true);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Guest state first; auth.js switches to the server profile after /api/me
-    auth = loadGuestState();
+    // Guest state first (unless a login hint says the server profile is coming); auth.js switches
+    // to the server profile after /api/me
+    if (!profileLoading) auth = loadGuestState();
     refreshDisplay();
     renderFeaturedCases();
 });
