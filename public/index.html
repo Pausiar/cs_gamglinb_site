@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="css/cases.css">
     <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/feed.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -18,14 +19,14 @@
     <div id="siteHeader"></div>
 
     <main class="main-content">
-        <!-- Live feed strip (fake drops, js/app.js) -->
+        <!-- Live feed strip (real drops from /api/feed, js/feed.js) -->
         <div class="live-feed">
             <div class="live-indicator">
                 <span class="live-dot"></span>
                 LIVE
             </div>
             <div class="live-feed-items" id="liveFeed">
-                <!-- Items will be populated by JS -->
+                <!-- Filled by js/feed.js -->
             </div>
         </div>
 
@@ -82,7 +83,6 @@
                     <span class="feature-go">Ir a Batallas <i class="fas fa-arrow-right"></i></span>
                 </a>
                 <a href="/recompensas" data-page-link="recompensas" class="feature-card">
-                    <span class="feature-tag">Próximamente</span>
                     <div class="feature-icon"><i class="fas fa-gift"></i></div>
                     <h3>Recompensas</h3>
                     <p>Caja gratuita diaria y más bonificaciones para tu saldo virtual.</p>
@@ -101,5 +101,6 @@
     <script src="js/case-art.js"></script>
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/feed.js"></script>
 </body>
 </html>
