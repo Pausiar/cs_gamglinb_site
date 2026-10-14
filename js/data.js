@@ -105,6 +105,7 @@ const cases = [
     {
         id: 1,
         name: "Caja Principiante",
+        theme: { key: "recruit", tagline: "Campo de entrenamiento", primary: "#7fb069", dark: "#2d4a22" },
         price: 0.50,
         category: "cheap",
         image: CASE_PLACEHOLDER,
@@ -118,6 +119,7 @@ const cases = [
     {
         id: 2,
         name: "Caja de Armas",
+        theme: { key: "arsenal", tagline: "Arsenal militar", primary: "#a3a36b", dark: "#3b3b24" },
         price: 2.50,
         category: "cheap",
         image: CASE_PLACEHOLDER,
@@ -131,6 +133,7 @@ const cases = [
     {
         id: 3,
         name: "Caja AK-47",
+        theme: { key: "kalashnikov", tagline: "Fiebre del Kalashnikov", primary: "#e4572e", dark: "#4a1c10" },
         price: 5.00,
         category: "medium",
         image: CASE_PLACEHOLDER,
@@ -144,6 +147,7 @@ const cases = [
     {
         id: 4,
         name: "Caja AWP",
+        theme: { key: "sniper", tagline: "Ojo de francotirador", primary: "#4cc9f0", dark: "#0b2a3a" },
         price: 8.00,
         category: "medium",
         image: CASE_PLACEHOLDER,
@@ -157,6 +161,7 @@ const cases = [
     {
         id: 5,
         name: "Caja Premium",
+        theme: { key: "premium", tagline: "Lujo negro y oro", primary: "#f7c94b", dark: "#1a1508" },
         price: 15.00,
         category: "medium",
         image: CASE_PLACEHOLDER,
@@ -170,6 +175,7 @@ const cases = [
     {
         id: 6,
         name: "Caja de Cuchillos",
+        theme: { key: "blade", tagline: "Filo de acero", primary: "#c0d6df", dark: "#1e2a30" },
         price: 25.00,
         category: "expensive",
         image: CASE_PLACEHOLDER,
@@ -182,6 +188,7 @@ const cases = [
     {
         id: 7,
         name: "Caja Legendaria",
+        theme: { key: "legend", tagline: "Corona de los legendarios", primary: "#b388ff", dark: "#2a1450" },
         price: 50.00,
         category: "expensive",
         image: CASE_PLACEHOLDER,
@@ -195,6 +202,7 @@ const cases = [
     {
         id: 8,
         name: "Caja Dragon",
+        theme: { key: "dragon", tagline: "Aliento de dragón", primary: "#ff3d3d", dark: "#3a0a05" },
         price: 100.00,
         category: "expensive",
         image: CASE_PLACEHOLDER,
@@ -215,6 +223,38 @@ const dropChances = {
     covert: 0.8,       // 0.8%
     gold: 0.2          // 0.2%
 };
+
+// Per-item drop chances (in %) for a case. Rarity chances are renormalized over
+// the rarities the case actually contains, then split evenly within each rarity.
+function getItemChances(items) {
+    const counts = {};
+    items.forEach(item => {
+        const rarity = getRarity(item);
+        counts[rarity] = (counts[rarity] || 0) + 1;
+    });
+    const total = Object.keys(counts).reduce((sum, rarity) => sum + dropChances[rarity], 0);
+    return items.map(item => {
+        const rarity = getRarity(item);
+        return (dropChances[rarity] / total) * 100 / counts[rarity];
+    });
+}
+
+// Picks an item from a case using getItemChances
+function rollItem(items) {
+    const chances = getItemChances(items);
+    let rand = Math.random() * 100;
+    for (let i = 0; i < items.length; i++) {
+        rand -= chances[i];
+        if (rand < 0) return items[i];
+    }
+    return items[items.length - 1];
+}
+
+function formatChance(chance) {
+    if (chance >= 10) return chance.toFixed(1) + '%';
+    if (chance >= 0.1) return chance.toFixed(2) + '%';
+    return chance.toFixed(3) + '%';
+}
 
 // Function to get rarity from item
 function getRarity(item) {

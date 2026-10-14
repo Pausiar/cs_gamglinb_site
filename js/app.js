@@ -21,18 +21,59 @@ let state = {
     isSpinning: false
 };
 
-// Load state from localStorage
+// localStorage key; switches per Steam profile (see switchProfile)
+let storageKey = 'skinDropState';
+
+function defaultState() {
+    return {
+        balance: 0,
+        inventory: [],
+        stats: {
+            casesOpened: 0,
+            totalSpent: 0,
+            totalWon: 0,
+            rarityDrops: { consumer: 0, industrial: 0, milspec: 0, restricted: 0, classified: 0, covert: 0, gold: 0 }
+        },
+        history: [],
+        currentCase: null,
+        isSpinning: false
+    };
+}
+
+// Load state from localStorage, filling in fields missing from older saves
 function loadState() {
-    const saved = localStorage.getItem('skinDropState');
-    if (saved) {
-        state = JSON.parse(saved);
+    const base = defaultState();
+    let saved = null;
+    try {
+        saved = JSON.parse(localStorage.getItem(storageKey));
+    } catch (e) {
+        saved = null;
     }
+    state = saved ? { ...base, ...saved, stats: { ...base.stats, ...saved.stats } } : base;
+    state.stats.rarityDrops = { ...base.stats.rarityDrops, ...state.stats.rarityDrops };
+    state.isSpinning = false;
+    state.inventory.forEach(item => { if (!item.uid) item.uid = generateUid(); });
     updateUI();
 }
 
 // Save state to localStorage
 function saveState() {
-    localStorage.setItem('skinDropState', JSON.stringify(state));
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch (e) {
+        // Storage unavailable (private mode, quota); state stays in memory
+    }
+}
+
+// Switch to the saved state of a Steam user (null = guest)
+function switchProfile(steamId) {
+    storageKey = steamId ? `skinDropState:${steamId}` : 'skinDropState';
+    loadState();
+    renderCases(currentFilter);
+}
+
+function generateUid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 // ==================== UI UPDATES ====================
@@ -49,7 +90,11 @@ function updateUI() {
         const bestDrop = state.history.reduce((best, current) => 
             current.price > best.price ? current : best
         );
-        document.getElementById('bestDrop').textContent = bestDrop.name.substring(0, 15) + '...';
+        document.getElementById('bestDrop').textContent = bestDrop.name.length > 18
+            ? bestDrop.name.substring(0, 15) + '...'
+            : bestDrop.name;
+    } else {
+        document.getElementById('bestDrop').textContent = '-';
     }
     
     // Update stats section
@@ -76,6 +121,9 @@ function updateUI() {
     
     // Update inventory
     updateInventory();
+
+    // Let feature modules (upgrader, battles, auth) re-render
+    document.dispatchEvent(new CustomEvent('skindrop:statechange'));
 }
 
 function updateRarityBars() {
@@ -124,12 +172,12 @@ function updateInventory() {
         return;
     }
     
-    inventoryGrid.innerHTML = state.inventory.map((item, index) => `
+    inventoryGrid.innerHTML = state.inventory.map(item => `
         <div class="inventory-item ${item.rarity}">
             <img src="${item.image}" alt="${item.name}">
             <div class="inventory-item-name">${item.name}</div>
             <div class="inventory-item-price">${item.price.toFixed(2)}€</div>
-            <button class="inventory-sell-btn" onclick="sellInventoryItem(${index})">
+            <button class="inventory-sell-btn" onclick="sellInventoryItem('${item.uid}')">
                 <i class="fas fa-coins"></i> Vender
             </button>
         </div>
@@ -148,7 +196,10 @@ function formatTime(timestamp) {
 }
 
 // ==================== CASES GRID ====================
-function renderCases(filter = 'all') {
+let currentFilter = 'all';
+
+function renderCases(filter = currentFilter) {
+    currentFilter = filter;
     const casesGrid = document.getElementById('casesGrid');
     
     const filteredCases = filter === 'all' 
@@ -291,16 +342,17 @@ function openCaseModal(caseId) {
 }
 
 function showCaseContents(caseData) {
-    contentsGrid.innerHTML = caseData.items.map(item => {
+    const chances = getItemChances(caseData.items);
+    contentsGrid.innerHTML = caseData.items.map((item, i) => {
         const rarity = getRarity(item);
-        const chance = dropChances[rarity];
+        const chance = formatChance(chances[i]);
         
         return `
             <div class="content-item ${rarity}">
                 <img src="${item.image}" alt="${item.name}">
                 <div class="content-item-name">${item.name}</div>
                 <div class="content-item-price">${item.price.toFixed(2)}€</div>
-                <div class="content-item-chance">${chance}%</div>
+                <div class="content-item-chance">${chance}</div>
             </div>
         `;
     }).join('');
@@ -367,30 +419,7 @@ function startCaseOpening(caseData) {
 }
 
 function determineWinner(items) {
-    const rand = Math.random() * 100;
-    let cumulative = 0;
-    
-    // Group items by rarity
-    const itemsByRarity = {};
-    items.forEach(item => {
-        const rarity = getRarity(item);
-        if (!itemsByRarity[rarity]) {
-            itemsByRarity[rarity] = [];
-        }
-        itemsByRarity[rarity].push(item);
-    });
-    
-    // Select rarity based on chances
-    for (const [rarity, chance] of Object.entries(dropChances)) {
-        cumulative += chance;
-        if (rand <= cumulative && itemsByRarity[rarity] && itemsByRarity[rarity].length > 0) {
-            // Select random item from this rarity
-            return itemsByRarity[rarity][Math.floor(Math.random() * itemsByRarity[rarity].length)];
-        }
-    }
-    
-    // Fallback to random item
-    return items[Math.floor(Math.random() * items.length)];
+    return rollItem(items);
 }
 
 function showWinner(winner, rarity, caseData) {
@@ -428,13 +457,16 @@ function showWinner(winner, rarity, caseData) {
     const glow = document.querySelector('.won-item-glow');
     glow.style.background = `radial-gradient(circle, ${getRarityColor(rarity)}40 0%, transparent 70%)`;
     
-    // Store winner data for buttons
+    // Store winner data for buttons; the drop can be sold or kept only once
     wonItemDisplay.dataset.winner = JSON.stringify(winner);
     wonItemDisplay.dataset.rarity = rarity;
+    wonItemDisplay.dataset.claimed = '';
 }
 
 // Winner action buttons
 document.getElementById('sellBtn').addEventListener('click', () => {
+    if (wonItemDisplay.dataset.claimed) return;
+    wonItemDisplay.dataset.claimed = '1';
     const winner = JSON.parse(wonItemDisplay.dataset.winner);
     state.balance += winner.price;
     saveState();
@@ -444,16 +476,19 @@ document.getElementById('sellBtn').addEventListener('click', () => {
 });
 
 document.getElementById('keepBtn').addEventListener('click', () => {
+    if (wonItemDisplay.dataset.claimed) return;
+    wonItemDisplay.dataset.claimed = '1';
     const winner = JSON.parse(wonItemDisplay.dataset.winner);
-    const rarity = wonItemDisplay.dataset.rarity;
-    state.inventory.push({ ...winner, rarity });
-    saveState();
-    updateUI();
+    addToInventory(winner);
     showToast('Guardado en inventario', 'success');
 });
 
 document.getElementById('openAgainBtn').addEventListener('click', () => {
     if (state.currentCase && state.balance >= state.currentCase.price) {
+        // An unclaimed drop goes to the inventory instead of being lost
+        if (!wonItemDisplay.dataset.claimed) {
+            addToInventory(JSON.parse(wonItemDisplay.dataset.winner));
+        }
         wonItemDisplay.classList.remove('active');
         rouletteTrack.style.display = 'flex';
         startCaseOpening(state.currentCase);
@@ -464,12 +499,38 @@ document.getElementById('openAgainBtn').addEventListener('click', () => {
 
 closeOpeningBtn.addEventListener('click', () => {
     if (!state.isSpinning) {
+        if (wonItemDisplay.classList.contains('active') && !wonItemDisplay.dataset.claimed) {
+            wonItemDisplay.dataset.claimed = '1';
+            addToInventory(JSON.parse(wonItemDisplay.dataset.winner));
+            showToast('Guardado en inventario', 'success');
+        }
         openingModal.classList.remove('active');
     }
 });
 
 // ==================== INVENTORY ACTIONS ====================
-function sellInventoryItem(index) {
+// Adds a skin to the inventory (rarity resolved from data) and returns the stored entry
+function addToInventory(item) {
+    const entry = { id: item.id, name: item.name, price: item.price, image: item.image, rarity: getRarity(item), uid: generateUid() };
+    state.inventory.push(entry);
+    saveState();
+    updateUI();
+    return entry;
+}
+
+// Removes an inventory item by uid and returns it (or null)
+function removeFromInventory(uid) {
+    const index = state.inventory.findIndex(i => i.uid === uid);
+    if (index === -1) return null;
+    const [item] = state.inventory.splice(index, 1);
+    saveState();
+    updateUI();
+    return item;
+}
+
+function sellInventoryItem(uid) {
+    const index = state.inventory.findIndex(i => i.uid === uid);
+    if (index === -1) return;
     const item = state.inventory[index];
     state.balance += item.price;
     state.inventory.splice(index, 1);
@@ -537,3 +598,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Make sellInventoryItem globally accessible
 window.sellInventoryItem = sellInventoryItem;
+
+// Shared API for feature modules (upgrader.js, battles.js, auth.js)
+window.SkinDrop = {
+    get state() { return state; },
+    saveState,
+    updateUI,
+    renderCases: () => renderCases(currentFilter),
+    switchProfile,
+    addToInventory,
+    removeFromInventory,
+    showToast,
+    rollItem,
+    getItemChances,
+    formatChance,
+    getRarity,
+    getRarityColor
+};
