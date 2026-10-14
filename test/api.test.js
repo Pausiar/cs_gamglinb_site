@@ -260,3 +260,34 @@ test('PS_Database store against a fake API with the assumed HTTP shapes', async 
     assert.equal(await store.updateProfile(SID, 0, out.state), false, 'stale version');
     assert.ok(calls.some(c => c.startsWith('PATCH /api/v1/skindrop/profiles?steam-id=eq.' + SID + '&version=eq.0')));
 });
+
+test('buildSteamLoginUrl: formato OpenID 2.0 que Steam acepta (query intacta, realm = origen de return_to)', () => {
+    const { buildSteamLoginUrl } = require('../lib/app.js');
+    const config = buildConfig({ BASE_URL: 'https://skindrop-cs2.vercel.app', SESSION_SECRET: SECRET });
+    const u = new URL(buildSteamLoginUrl(config, 'abc_DEF-123'));
+    assert.equal(u.origin + u.pathname, 'https://steamcommunity.com/openid/login');
+    const p = u.searchParams;
+    assert.deepEqual([...p.keys()].sort(), [
+        'openid.claimed_id', 'openid.identity', 'openid.mode', 'openid.ns', 'openid.realm', 'openid.return_to'
+    ]);
+    assert.equal(p.get('openid.ns'), 'http://specs.openid.net/auth/2.0');
+    assert.equal(p.get('openid.mode'), 'checkid_setup');
+    assert.equal(p.get('openid.identity'), 'http://specs.openid.net/auth/2.0/identifier_select');
+    assert.equal(p.get('openid.claimed_id'), 'http://specs.openid.net/auth/2.0/identifier_select');
+    const returnTo = new URL(p.get('openid.return_to'));
+    assert.equal(returnTo.href, 'https://skindrop-cs2.vercel.app/auth/steam/return?state=abc_DEF-123');
+    assert.equal(new URL(p.get('openid.realm')).origin, returnTo.origin);
+});
+
+test('GET /auth/steam: 302 a Steam con la query completa y cookie de estado', async () => {
+    const { base, close } = await startServer();
+    try {
+        const r = await fetch(base + '/auth/steam', { redirect: 'manual' });
+        assert.equal(r.status, 302);
+        const loc = new URL(r.headers.get('location'));
+        assert.equal(loc.origin + loc.pathname, 'https://steamcommunity.com/openid/login');
+        assert.equal(loc.searchParams.get('openid.mode'), 'checkid_setup');
+        assert.match(loc.searchParams.get('openid.return_to'), /^http:\/\/localhost:3000\/auth\/steam\/return\?state=[\w-]+$/);
+        assert.match(r.headers.get('set-cookie'), /^sd_login_state=/);
+    } finally { await close(); }
+});
