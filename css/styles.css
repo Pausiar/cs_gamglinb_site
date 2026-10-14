@@ -40,6 +40,8 @@
 
 html {
     scroll-behavior: smooth;
+    /* Fixed header + fixed live feed sit on top of anchor targets */
+    scroll-padding-top: calc(var(--header-height) + var(--live-feed-height));
 }
 
 body {
@@ -104,8 +106,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    justify-content: safe center;
     gap: 10px;
-    flex-wrap: wrap;
+    /* Never wrap: when the links don't fit, the strip scrolls sideways */
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.nav-menu::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-link {
@@ -120,6 +133,7 @@ body {
     padding: 8px 16px;
     border-radius: var(--border-radius);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-link:hover,
@@ -131,7 +145,7 @@ body {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
@@ -1515,6 +1529,50 @@ body {
 }
 
 /* ==================== RESPONSIVE ==================== */
+/* Six nav links + balance + auth button need tighter spacing between ~900px and ~1300px */
+@media (max-width: 1300px) {
+    .header-container {
+        gap: 14px;
+    }
+
+    .nav-menu {
+        gap: 2px;
+    }
+
+    .nav-link {
+        font-size: 14px;
+        gap: 4px;
+        padding: 8px 8px;
+    }
+}
+
+@media (max-width: 1000px) {
+    .header-container {
+        gap: 12px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .logo i {
+        font-size: 22px;
+    }
+
+    .nav-menu {
+        gap: 0;
+    }
+
+    .nav-link {
+        font-size: 13px;
+        padding: 8px 6px;
+    }
+
+    .nav-link i {
+        display: none;
+    }
+}
+
 @media (max-width: 1100px) {
     .stats-container {
         grid-template-columns: repeat(2, 1fr);
@@ -1545,8 +1603,15 @@ body {
     :root {
         --header-height: auto;
     }
-    
+
+    /* On phones the header is in the page flow (height is content-driven),
+       so nothing is fixed on top of the content and no scroll offset is needed */
+    html {
+        scroll-padding-top: 0;
+    }
+
     .header {
+        position: relative;
         height: auto;
         padding: 10px 15px;
     }
@@ -1565,13 +1630,23 @@ body {
         font-size: 22px;
     }
     
+    /* Span the full header width and wrap instead of overflowing the viewport */
     .header-actions {
-        justify-self: end;
+        grid-column: 1 / -1;
+        justify-self: stretch;
+        min-width: 0;
+        max-width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .header-actions > * {
+        max-width: 100%;
     }
     
     .nav-menu {
         grid-column: 1 / -1;
         justify-content: center;
+        justify-content: safe center;
         padding: 10px 0 5px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
