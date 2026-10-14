@@ -52,3 +52,38 @@ test('unknown ext keys are not written', async () => {
     assert.equal(p.ext.evil, undefined);
     assert.equal(p.data.balance, 0);
 });
+
+test('generic tables: insert, list with filters/order, optimistic update', async () => {
+    const store = createMemoryStore();
+    const t = store.table('lobbies');
+    const a = await t.insert({ status: 'open', cost: 5, version: 0 });
+    await t.insert({ status: 'done', cost: 50, version: 0 });
+    await t.insert({ status: 'open', cost: 20, version: 0 });
+    const open = await t.list({ filters: { status: 'eq.open' }, order: 'cost.desc' });
+    assert.deepEqual(open.map(r => r.cost), [20, 5]);
+    assert.equal((await t.list({ filters: { cost: 'gte.20' } })).length, 2);
+    assert.equal((await t.list({ filters: { status: 'in.(open,done)' }, limit: 2 })).length, 2);
+    assert.equal(await t.update({ id: `eq.${a.id}`, version: 'eq.0' }, { status: 'running', version: 1 }), 1);
+    assert.equal(await t.update({ id: `eq.${a.id}`, version: 'eq.0' }, { status: 'x', version: 1 }), 0);
+    assert.equal((await t.get(a.id)).status, 'running');
+    await assert.rejects(() => t.update({}, { status: 'x' }));
+    assert.throws(() => store.table('../profiles'));
+});
+
+test('psdb tables flatten rows and build PostgREST URLs', async () => {
+    const { createPsdbStore } = require('../lib/store.js');
+    const calls = [];
+    const fetchImpl = async (url, opts) => {
+        calls.push({ url, method: opts.method, body: opts.body });
+        const body = opts.method === 'PATCH'
+            ? { ok: true, data: { count: 1, rows: [] } }
+            : { ok: true, data: [{ id: 'r1', data: { status: 'open', 'steam-id': '9' }, createdAt: 't', updatedAt: 'u' }] };
+        return { status: 200, ok: true, text: async () => JSON.stringify(body) };
+    };
+    const store = createPsdbStore({ PSDB_URL: 'https://db.example', PSDB_API_KEY: 'k' }, { fetchImpl });
+    const rows = await store.table('lobbies').list({ filters: { status: 'eq.open' }, limit: 5 });
+    assert.deepEqual(rows[0], { status: 'open', 'steam-id': '9', id: 'r1', createdAt: 't', updatedAt: 'u' });
+    assert.match(calls[0].url, /^https:\/\/db\.example\/api\/v1\/skindrop\/lobbies\?status=eq\.open&order=created_at\.desc&limit=5$/);
+    assert.equal(await store.table('lobbies').update({ id: 'eq.r1', version: 'eq.0' }, { version: 1 }), 1);
+    assert.equal(calls[1].method, 'PATCH');
+});
