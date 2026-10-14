@@ -41,6 +41,9 @@
     // ==================== HELPERS ====================
     function sd() { return window.SkinDrop; }
     function st() { return window.SkinDrop.state; }
+    // Link to the cases page (clean URL, or cajas.html when the site is opened from disk)
+    function casesHref() { return window.SkinDropLayout ? window.SkinDropLayout.href('cajas') : '/cajas'; }
+    function sfx() { return window.SkinDropSfx || null; }
 
     // Escape any dynamic text before it goes into innerHTML / attributes
     function esc(value) {
@@ -278,7 +281,7 @@
                     <i class="fas fa-box-open"></i>
                     <p>Necesitas skins en tu inventario para usar el Upgrader.</p>
                     <p class="upg-empty-sub">Abre cajas para conseguirlas (o apuesta solo saldo).</p>
-                    <a class="upg-link" href="#cases"><i class="fas fa-boxes"></i> Ir a Cajas</a>
+                    <a class="upg-link" href="${esc(casesHref())}"><i class="fas fa-boxes"></i> Ir a Cajas</a>
                 </div>`;
             return;
         }
@@ -547,6 +550,7 @@
         renderDial();
 
         animateNeedle(r.roll);
+        if (sfx()) ui.spin.stopTicks = sfx().watchRotation(els.needle, { step: 15, maxMs: SPIN_MS + 1000 });
         setTimeout(() => finishUpgrade(), SPIN_MS + 150);
     }
 
@@ -566,6 +570,7 @@
         const spin = ui.spin;
         if (!spin || !spin.outcome) { ui.spin = null; renderAll(); return; }
         const r = spin.outcome;
+        if (spin.stopTicks) spin.stopTicks();
         ui.settling = true;
         try {
             spin.reveal();      // show the won skin in the inventory / history
@@ -579,6 +584,12 @@
         renderAll();
         showResult(ui.result);
         celebrate(r.win, rarityOf(target));
+        if (sfx()) {
+            const rar = rarityOf(target);
+            if (!r.win) sfx().lose();
+            else if (rar === 'covert' || rar === 'gold') sfx().rare();
+            else sfx().win();
+        }
         if (r.win) sd().showToast('¡Upgrade conseguido! Ganaste ' + target.name + ' (' + money(target.price) + ')', 'success');
         else sd().showToast('Upgrade fallido. Perdiste ' + money(r.stake) + ' apostados', 'error');
     }
@@ -621,12 +632,7 @@
 
     // ==================== EVENTS ====================
     function onClick(e) {
-        const link = e.target.closest('a.upg-link');
-        if (link) {
-            const target = document.querySelector(link.getAttribute('href'));
-            if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
-            return;
-        }
+        if (e.target.closest('a.upg-link')) return;   // plain navigation to another page
         const btn = e.target.closest('[data-act]');
         if (!btn || btn.disabled || ui.spin) return;
         switch (btn.dataset.act) {

@@ -4,7 +4,7 @@
   "buildCommand": "",
   "installCommand": "",
   "outputDirectory": "public",
-  "cleanUrls": false,
+  "cleanUrls": true,
   "functions": {
     "api/index.js": {
       "includeFiles": "public/js/**",

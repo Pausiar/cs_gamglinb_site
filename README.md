@@ -9,16 +9,41 @@ Web de apertura de cajas de CS2 (simulación, sin dinero real): cajas, upgrader,
 
 ```
 public/            Sitio estático (lo único que se publica como estático)
-  index.html, css/, js/
+  *.html           Una página por sección: index (Inicio), cajas, upgrader, batallas, inventario,
+                   estadisticas, recompensas*, ranking*, provably-fair* (*marcadores de posición
+                   con su raíz vacía: #rewardsRoot, #leaderboardRoot, #fairRoot), terminos,
+                   privacidad, contacto. URLs limpias: /cajas, /ranking...
+  favicon.svg
+  css/             styles.css (base: cabecera, modal, pie, toasts), home.css, cases.css, stats.css,
+                   inventory.css, upgrader.css, battles.css, auth.css, pages.css (textos y "Próximamente")
+  js/layout.js     Cabecera, modal de saldo y pie compartidos (se inyectan en #siteHeader / #siteFooter)
+  js/sfx.js        Sonidos generados con Web Audio + botón de silencio
+  js/app.js        Estado, acciones (window.SkinDrop) y UI de cajas / inventario / estadísticas
   js/data.js       Catálogo de skins y cajas (navegador y Node)
   js/engine.js     Motor del juego puro (navegador y Node)
 lib/app.js         Handler HTTP: login de Steam, sesión, API del juego, estáticos (local)
 lib/store.js       Almacén de perfiles: PS_Database o memoria, con concurrencia optimista
+lib/router.js      Registro de rutas API extra
+lib/routes/        Un módulo por funcionalidad nueva de API (index.js lista los módulos)
+lib/hooks/         Hooks del juego: makeRng / afterAction (index.js lista los módulos)
 server.js          Servidor local (npm start)
 api/index.js       Función serverless de Vercel (mismo handler)
 scripts/psdb-smoke.js  Prueba contra la API real de PS_Database
 test/              Tests (node:test, sin dependencias)
 ```
+
+### Añadir una página
+
+1. Crea `public/<nombre>.html` copiando una existente: `<body data-page="<nombre>">`, los marcadores `<div id="siteHeader"></div>` / `<div id="siteFooter"></div>`, `js/layout.js` y `js/sfx.js` antes del resto de scripts, y solo los CSS/JS que la página necesite (`app.js` + `auth.js` en todas, para el saldo y el login).
+2. Añádela a `NAV` o `FOOTER_LINKS` en `public/js/layout.js` (el enlace activo se marca con `data-page`).
+3. Enlaces entre páginas con URLs limpias (`/cajas`); en el HTML estático, `<a href="/cajas" data-page-link="cajas">` para que también funcionen abriendo los archivos desde disco.
+
+`window.SkinDrop` (en `app.js`) es la API para los scripts de cada página: `state`, `actions.*`, `api.get/post`, `refreshState()`, `applyServerState(state)`, `showToast`, etc.
+
+### Extender el servidor (rutas y hooks)
+
+- **Rutas**: `lib/routes/<modulo>.js` exporta `register(router, ctx)` y se añade al array de `lib/routes/index.js`. `router.get/post(path, handler, opts)` y `router.action(path, accion)` aplican la misma seguridad que la API del juego (sesión, mismo origen, JSON, ≤ 10 KB). La cabecera de `lib/routes/index.js` documenta `router`, `ctx` y los handlers.
+- **Hooks**: `lib/hooks/<modulo>.js` exporta `install(hooks, ctx)` (array en `lib/hooks/index.js`). `hooks.makeRng({ steamId, profile, action })` devuelve `{ rng, meta }` y lo usa toda acción del juego; si `meta` no es `null` la respuesta incluye `fair: meta`. `hooks.afterAction(evento)` / `hooks.onAfterAction(fn)` se ejecutan tras guardar la acción (sus errores se registran y nunca fallan la petición). Ver `lib/hooks/defaults.js`.
 
 ## Ejecutar en local
 
@@ -30,7 +55,7 @@ npm start                # http://localhost:3000
 npm test                 # tests del motor y de la API
 ```
 
-Sin `PSDB_URL` + `PSDB_API_KEY` el servidor usa un almacén **en memoria** (los perfiles de Steam se pierden al reiniciar). Abrir `public/index.html` directamente (`file://`) también funciona, pero solo en modo invitado.
+Sin `PSDB_URL` + `PSDB_API_KEY` el servidor usa un almacén **en memoria** (los perfiles de Steam se pierden al reiniciar). Abrir `public/index.html` directamente (`file://`) también funciona (los enlaces apuntan a los `.html`), pero solo en modo invitado.
 
 ## Variables de entorno
 
@@ -49,6 +74,7 @@ Sin `PSDB_URL` + `PSDB_API_KEY` el servidor usa un almacén **en memoria** (los 
 ## Desplegar en Vercel
 
 1. Importa el repositorio en Vercel (Framework: *Other*). `vercel.json` ya define:
+   - `cleanUrls: true`: `/cajas` sirve `cajas.html` y `/cajas.html` redirige a `/cajas` (el servidor local hace lo mismo).
    - `outputDirectory: "public"` y sin build: solo `public/` se sirve como estático (nunca `lib/`, `server.js`, `scripts/`...).
    - Reescrituras de `/auth/*` y `/api/*` a la función `api/index.js` (que incluye `public/js/**` para cargar el motor).
    - Node 22 vía `engines` de `package.json`.
@@ -65,11 +91,15 @@ Todas las rutas del juego exigen la cookie de sesión de Steam (`401` si no hay)
 |---|---|---|
 | `GET /api/me` | – | `{ loggedIn, steamId, name, avatar, profileUrl }` |
 | `GET /api/state` | – | `{ steamId, state }` |
-| `POST /api/open` | `{ caseId }` | `{ state, result: { caseId, item, rarity } }` |
+| `POST /api/open` | `{ caseId }` | `{ state, result: { caseId, item, rarity }, fair? }` |
 | `POST /api/sell` | `{ uids: [...] }` | `{ state, result: { sold, amount } }` |
 | `POST /api/upgrade` | `{ uids, balanceStake, targetId, mode: "under"\|"over" }` | `{ state, result: { win, roll, chance, mode, stake, itemsValue, balanceStake, itemCount, staked, target, item } }` |
 | `POST /api/battle` | `{ caseIds: [...], mode: "1v1"\|"1v1v1"\|"2v2"\|"1v1v1v1", crazy, botNames? }` | `{ state, result: { mode, crazy, caseIds, seats, rounds, totals, teams, leaders, tiebreak, winnerTeam, won, pot, cost, items } }` |
 | `POST /api/promo` | `{ code }` | `{ state, result: { code, amount } }` |
+
+`fair` solo aparece en las acciones del juego cuando un hook `makeRng` devuelve `meta` (por defecto no hay).
+
+`GET /auth/steam?next=/cajas` vuelve a esa página tras el login (solo rutas simples como `/cajas`).
 
 `state = { balance, inventory: [{uid,id,name,price,rarity}], stats: {casesOpened,totalSpent,totalWon,rarityDrops}, history: [...] (máx. 100), promosUsed }`.
 

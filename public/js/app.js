@@ -142,13 +142,8 @@ function useGuestMode() {
 }
 
 async function fetchServerState(seq) {
-    const resp = await fetch('/api/state', {
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' },
-        cache: 'no-store'
-    });
-    const json = await resp.json().catch(() => null);
-    if (!resp.ok || !json || !json.state) throw new Error((json && json.error) || 'HTTP ' + resp.status);
+    const json = await api.get('/api/state');
+    if (!json || !json.state) throw new Error('Respuesta del servidor no válida.');
     if (seq !== profileSeq) return;
     auth = Engine.normalizeState(json.state);
     refreshDisplay();
@@ -194,24 +189,46 @@ const ACTION_ENDPOINTS = {
 };
 let actionQueue = Promise.resolve();
 
-async function callServer(name, params) {
+// JSON request to the same-origin server API. Rejects with an Error (message in Spanish) that
+// also carries `status` and `code`. Feature scripts can use it through SkinDrop.api.
+async function request(method, url, body) {
+    const init = {
+        method,
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+    };
+    if (method === 'GET') {
+        init.cache = 'no-store';
+    } else {
+        init.headers['Content-Type'] = 'application/json';
+        init.body = JSON.stringify(body || {});
+    }
     let resp;
     try {
-        resp = await fetch(ACTION_ENDPOINTS[name], {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify(params || {})
-        });
+        resp = await fetch(url, init);
     } catch (e) {
         throw new Error('Sin conexión con el servidor. Inténtalo de nuevo.');
     }
     const json = await resp.json().catch(() => null);
     if (!resp.ok || !json) {
-        if (resp.status === 401) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión con Steam.');
-        throw new Error((json && json.error) || 'Error del servidor (' + resp.status + ').');
+        let message;
+        if (resp.status === 401) message = 'Tu sesión ha caducado. Vuelve a iniciar sesión con Steam.';
+        else message = (json && json.error) || 'Error del servidor (' + resp.status + ').';
+        const err = new Error(message);
+        err.status = resp.status;
+        err.code = json && json.code;
+        throw err;
     }
     return json;
+}
+
+const api = {
+    get: url => request('GET', url),
+    post: (url, body) => request('POST', url, body)
+};
+
+function callServer(name, params) {
+    return api.post(ACTION_ENDPOINTS[name], params);
 }
 
 function revealUids(name, result) {
@@ -259,83 +276,127 @@ const actions = {
     promo: params => runAction('redeemPromo', params)
 };
 
+// Replaces the profile with a state returned by the server (the `state` of an /api/* response,
+// or the whole response) and redraws. Only meaningful for logged-in users: in guest mode it is
+// ignored (returns false) so a stray server state never overwrites the local profile.
+function applyServerState(next) {
+    const raw = next && next.state ? next.state : next;
+    if (mode !== 'server' || !raw || typeof raw !== 'object') return false;
+    auth = Engine.normalizeState(raw);
+    refreshDisplay();
+    return true;
+}
+
+// Re-reads the profile (GET /api/state when logged in, localStorage for guests) and redraws.
+// Runs in the action queue, so it never overtakes an action that is still in flight.
+// Resolves with the display state; rejects if the server cannot be reached.
+function refreshState() {
+    const job = async () => {
+        if (mode === 'server') {
+            await fetchServerState(profileSeq);
+        } else {
+            auth = loadGuestState();
+            refreshDisplay();
+        }
+        return state;
+    };
+    const run = actionQueue.then(job, job);
+    actionQueue = run.catch(() => {});
+    return run;
+}
+
+
+// ==================== UI HELPERS ====================
+function byId(id) {
+    return document.getElementById(id);
+}
+
+function setText(id, text) {
+    const el = byId(id);
+    if (el) el.textContent = text;
+}
+
+function escapeHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // ==================== UI UPDATES ====================
+// Every part below renders only if its elements exist on the current page
+// (hero stats: index, stats/history/rarity: estadisticas, inventory: inventario,
+// cases: cajas / index). The header balance exists on every page.
 function updateUI() {
-    // Update balance
-    document.getElementById('balance').textContent = state.balance.toFixed(2);
-    
-    // Update hero stats
-    document.getElementById('totalOpened').textContent = state.stats.casesOpened;
-    document.getElementById('totalWon').textContent = state.stats.totalWon.toFixed(2) + '€';
-    
-    // Find best drop
-    if (state.history.length > 0) {
-        const bestDrop = state.history.reduce((best, current) => 
-            current.price > best.price ? current : best
-        );
-        document.getElementById('bestDrop').textContent = bestDrop.name.length > 18
-            ? bestDrop.name.substring(0, 15) + '...'
-            : bestDrop.name;
-    } else {
-        document.getElementById('bestDrop').textContent = '-';
-    }
-    
-    // Update stats section
-    document.getElementById('statCasesOpened').textContent = state.stats.casesOpened;
-    document.getElementById('statTotalSpent').textContent = state.stats.totalSpent.toFixed(2) + '€';
-    document.getElementById('statTotalWon').textContent = state.stats.totalWon.toFixed(2) + '€';
-    
-    const profit = state.stats.totalWon - state.stats.totalSpent;
-    const profitElement = document.getElementById('statProfit');
-    profitElement.textContent = (profit >= 0 ? '+' : '') + profit.toFixed(2) + '€';
-    
-    const profitCard = profitElement.closest('.stats-card');
-    if (profit < 0) {
-        profitCard.classList.add('negative');
-    } else {
-        profitCard.classList.remove('negative');
-    }
-    
-    // Update rarity bars
+    setText('balance', state.balance.toFixed(2));
+
+    updateHeroStats();
+    updateStatsCards();
     updateRarityBars();
-    
-    // Update history
     updateHistory();
-    
-    // Update inventory
     updateInventory();
 
-    // Let feature modules (upgrader, battles, auth) re-render
+    // Let feature modules (upgrader, battles, auth, ...) re-render
     document.dispatchEvent(new CustomEvent('skindrop:statechange'));
 }
 
+function updateHeroStats() {
+    if (!byId('totalOpened')) return;
+    setText('totalOpened', state.stats.casesOpened);
+    setText('totalWon', state.stats.totalWon.toFixed(2) + '€');
+
+    let best = '-';
+    if (state.history.length > 0) {
+        const bestDrop = state.history.reduce((b, current) => current.price > b.price ? current : b);
+        best = bestDrop.name.length > 18 ? bestDrop.name.substring(0, 15) + '...' : bestDrop.name;
+    }
+    setText('bestDrop', best);
+}
+
+function updateStatsCards() {
+    const profitElement = byId('statProfit');
+    if (!profitElement) return;
+    setText('statCasesOpened', state.stats.casesOpened);
+    setText('statTotalSpent', state.stats.totalSpent.toFixed(2) + '€');
+    setText('statTotalWon', state.stats.totalWon.toFixed(2) + '€');
+
+    const profit = state.stats.totalWon - state.stats.totalSpent;
+    profitElement.textContent = (profit >= 0 ? '+' : '') + profit.toFixed(2) + '€';
+    const profitCard = profitElement.closest('.stats-card');
+    if (profitCard) profitCard.classList.toggle('negative', profit < 0);
+}
+
 function updateRarityBars() {
+    if (!byId('rarityBars')) return;
     const total = Object.values(state.stats.rarityDrops).reduce((a, b) => a + b, 0);
-    
+
     for (const [rarity, count] of Object.entries(state.stats.rarityDrops)) {
         const percentage = total > 0 ? (count / total) * 100 : 0;
         const bar = document.querySelector(`.bar-fill[data-rarity="${rarity}"]`);
-        const countElement = document.getElementById(`count${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`);
-        
+        const countElement = byId(`count${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`);
+
         if (bar) bar.style.width = percentage + '%';
         if (countElement) countElement.textContent = count;
     }
 }
 
 function updateHistory() {
-    const historyList = document.getElementById('historyList');
-    
+    const historyList = byId('historyList');
+    if (!historyList) return;
+
     if (state.history.length === 0) {
         historyList.innerHTML = '<p class="no-history">Aún no has abierto ninguna caja</p>';
         return;
     }
-    
+
     historyList.innerHTML = state.history.slice().reverse().slice(0, 50).map(item => `
-        <div class="history-item ${item.rarity}">
-            <img src="${item.image}" alt="${item.name}">
+        <div class="history-item ${escapeHtml(item.rarity)}">
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
             <div class="history-item-info">
-                <div class="history-item-name">${item.name}</div>
-                <div class="history-item-case">${item.caseName}</div>
+                <div class="history-item-name">${escapeHtml(item.name)}</div>
+                <div class="history-item-case">${escapeHtml(item.caseName)}</div>
             </div>
             <div class="history-item-price">${item.price.toFixed(2)}€</div>
             <div class="history-item-time">${formatTime(item.timestamp)}</div>
@@ -344,23 +405,23 @@ function updateHistory() {
 }
 
 function updateInventory() {
-    const inventoryGrid = document.getElementById('inventoryGrid');
-    const inventoryValue = document.getElementById('inventoryValue');
-    
+    const inventoryGrid = byId('inventoryGrid');
+    if (!inventoryGrid) return;
+
     const totalValue = state.inventory.reduce((sum, item) => sum + item.price, 0);
-    inventoryValue.textContent = totalValue.toFixed(2) + '€';
-    
+    setText('inventoryValue', totalValue.toFixed(2) + '€');
+
     if (state.inventory.length === 0) {
         inventoryGrid.innerHTML = '<p class="no-items">Tu inventario está vacío</p>';
         return;
     }
-    
+
     inventoryGrid.innerHTML = state.inventory.map(item => `
-        <div class="inventory-item ${item.rarity}">
-            <img src="${item.image}" alt="${item.name}">
-            <div class="inventory-item-name">${item.name}</div>
+        <div class="inventory-item ${escapeHtml(item.rarity)}">
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+            <div class="inventory-item-name">${escapeHtml(item.name)}</div>
             <div class="inventory-item-price">${item.price.toFixed(2)}€</div>
-            <button class="inventory-sell-btn" onclick="sellInventoryItem('${item.uid}')">
+            <button type="button" class="inventory-sell-btn" data-sell-uid="${escapeHtml(item.uid)}">
                 <i class="fas fa-coins"></i> Vender
             </button>
         </div>
@@ -371,7 +432,7 @@ function formatTime(timestamp) {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
-    
+
     if (diff < 60000) return 'Ahora';
     if (diff < 3600000) return Math.floor(diff / 60000) + ' min';
     if (diff < 86400000) return Math.floor(diff / 3600000) + ' h';
@@ -379,66 +440,97 @@ function formatTime(timestamp) {
 }
 
 // ==================== CASES GRID ====================
+// #casesGrid (cajas) shows every case with filters; #featuredCases (index) shows a
+// short row of links to the cases page.
 let currentFilter = 'all';
+const FEATURED_CASE_IDS = [1, 3, 5, 7];
+
+function caseCardHtml(caseItem, link) {
+    const bestItem = caseItem.items.reduce((best, current) =>
+        current.price > best.price ? current : best
+    );
+    const art = `
+        <div class="case-image">
+            <img src="${escapeHtml(caseItem.image)}" alt="${escapeHtml(caseItem.name)}">
+            <div class="case-best-drop">
+                <i class="fas fa-star"></i>
+                ${bestItem.price.toFixed(2)}€
+            </div>
+        </div>`;
+    if (link) {
+        return `
+            <a class="case-card" href="${escapeHtml(link)}">
+                ${art}
+                <div class="case-info">
+                    <h3 class="case-name">${escapeHtml(caseItem.name)}</h3>
+                    <div class="case-price">
+                        <span class="price-value">${caseItem.price.toFixed(2)}€</span>
+                        <span class="open-btn">VER</span>
+                    </div>
+                </div>
+            </a>`;
+    }
+    return `
+        <div class="case-card" data-case-id="${caseItem.id}" role="button" tabindex="0">
+            ${art}
+            <div class="case-info">
+                <h3 class="case-name">${escapeHtml(caseItem.name)}</h3>
+                <div class="case-price">
+                    <span class="price-value">${caseItem.price.toFixed(2)}€</span>
+                    <button type="button" class="open-btn" tabindex="-1" ${state.balance < caseItem.price ? 'disabled' : ''}>
+                        ABRIR
+                    </button>
+                </div>
+            </div>
+        </div>`;
+}
 
 function renderCases(filter = currentFilter) {
     currentFilter = filter;
-    const casesGrid = document.getElementById('casesGrid');
-    
-    const filteredCases = filter === 'all' 
-        ? cases 
+    const casesGrid = byId('casesGrid');
+    if (!casesGrid) return;
+
+    const filteredCases = filter === 'all'
+        ? cases
         : cases.filter(c => c.category === filter);
-    
-    casesGrid.innerHTML = filteredCases.map(caseItem => {
-        const bestItem = caseItem.items.reduce((best, current) => 
-            current.price > best.price ? current : best
-        );
-        
-        return `
-            <div class="case-card" onclick="openCaseModal(${caseItem.id})">
-                <div class="case-image">
-                    <img src="${caseItem.image}" alt="${caseItem.name}">
-                    <div class="case-best-drop">
-                        <i class="fas fa-star"></i>
-                        ${bestItem.price.toFixed(2)}€
-                    </div>
-                </div>
-                <div class="case-info">
-                    <h3 class="case-name">${caseItem.name}</h3>
-                    <div class="case-price">
-                        <span class="price-value">${caseItem.price.toFixed(2)}€</span>
-                        <button class="open-btn" ${state.balance < caseItem.price ? 'disabled' : ''}>
-                            ABRIR
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
+
+    casesGrid.innerHTML = filteredCases.map(caseItem => caseCardHtml(caseItem)).join('');
 }
 
-// ==================== LIVE FEED ====================
+function renderFeaturedCases() {
+    const row = byId('featuredCases');
+    if (!row) return;
+    const casesPage = window.SkinDropLayout ? window.SkinDropLayout.href('cajas') : '/cajas';
+    row.innerHTML = FEATURED_CASE_IDS
+        .map(id => cases.find(c => c.id === id))
+        .filter(Boolean)
+        .map(c => caseCardHtml(c, casesPage))
+        .join('');
+}
+
+// ==================== LIVE FEED (index) ====================
 function initLiveFeed() {
-    const liveFeed = document.getElementById('liveFeed');
+    const liveFeed = byId('liveFeed');
+    if (!liveFeed) return;
     const fakeUsers = ['xXDragonSlayerXx', 'ProGamer2024', 'SkinMaster', 'LuckyShot', 'CS2Legend', 'HeadshotKing', 'NightHunter', 'SilverFox', 'GoldenEagle', 'PhantomX'];
-    
+
     // Generate random drops for live feed
     let feedItems = [];
     for (let i = 0; i < 20; i++) {
         const randomRarity = Object.keys(skins)[Math.floor(Math.random() * Object.keys(skins).length)];
         const randomSkin = skins[randomRarity][Math.floor(Math.random() * skins[randomRarity].length)];
         const randomUser = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
-        
+
         feedItems.push({
             user: randomUser,
             skin: randomSkin,
             rarity: randomRarity
         });
     }
-    
+
     // Duplicate for infinite scroll
     feedItems = [...feedItems, ...feedItems];
-    
+
     liveFeed.innerHTML = feedItems.map(item => `
         <div class="live-item">
             <img src="${item.skin.image}" alt="${item.skin.name}">
@@ -448,86 +540,99 @@ function initLiveFeed() {
     `).join('');
 }
 
-// ==================== BALANCE MODAL ====================
-const balanceModal = document.getElementById('balanceModal');
-const addBalanceBtn = document.getElementById('addBalanceBtn');
-const closeModalBtn = document.getElementById('closeModal');
-const applyCodeBtn = document.getElementById('applyCode');
-const promoCodeInput = document.getElementById('promoCode');
-
-addBalanceBtn.addEventListener('click', () => {
-    balanceModal.classList.add('active');
-});
-
-closeModalBtn.addEventListener('click', () => {
-    balanceModal.classList.remove('active');
-});
-
-balanceModal.addEventListener('click', (e) => {
-    if (e.target === balanceModal) {
-        balanceModal.classList.remove('active');
-    }
-});
-
+// ==================== BALANCE MODAL (injected by layout.js on every page) ====================
+const balanceModal = byId('balanceModal');
+const addBalanceBtn = byId('addBalanceBtn');
+const closeModalBtn = byId('closeModal');
+const applyCodeBtn = byId('applyCode');
+const promoCodeInput = byId('promoCode');
 let promoBusy = false;
-applyCodeBtn.addEventListener('click', async () => {
-    const code = promoCodeInput.value.toLowerCase().trim();
-    if (!code) {
-        showToast('Código inválido', 'error');
-        return;
-    }
-    if (promoBusy) return;
-    promoBusy = true;
-    applyCodeBtn.disabled = true;
-    try {
-        const { result } = await actions.promo({ code });
-        showToast(`¡Código aplicado! +${result.amount.toLocaleString('es-ES')}€`, 'success');
-        promoCodeInput.value = '';
-        balanceModal.classList.remove('active');
-    } catch (e) {
-        showToast(e.message, 'error');
-    } finally {
-        promoBusy = false;
-        applyCodeBtn.disabled = false;
-    }
-});
 
-promoCodeInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        applyCodeBtn.click();
-    }
-});
+function initBalanceModal() {
+    if (!balanceModal || !addBalanceBtn) return;
 
-// ==================== CASE OPENING ====================
-const openingModal = document.getElementById('openingModal');
-const closeOpeningBtn = document.getElementById('closeOpening');
-const rouletteTrack = document.getElementById('rouletteTrack');
-const wonItemDisplay = document.getElementById('wonItemDisplay');
-const contentsGrid = document.getElementById('contentsGrid');
+    addBalanceBtn.addEventListener('click', () => {
+        balanceModal.classList.add('active');
+        if (promoCodeInput) promoCodeInput.focus();
+    });
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => balanceModal.classList.remove('active'));
+    }
+
+    balanceModal.addEventListener('click', (e) => {
+        if (e.target === balanceModal) balanceModal.classList.remove('active');
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') balanceModal.classList.remove('active');
+    });
+
+    if (!applyCodeBtn || !promoCodeInput) return;
+
+    applyCodeBtn.addEventListener('click', async () => {
+        const code = promoCodeInput.value.toLowerCase().trim();
+        if (!code) {
+            showToast('Código inválido', 'error');
+            return;
+        }
+        if (promoBusy) return;
+        promoBusy = true;
+        applyCodeBtn.disabled = true;
+        try {
+            const { result } = await actions.promo({ code });
+            showToast(`¡Código aplicado! +${result.amount.toLocaleString('es-ES')}€`, 'success');
+            promoCodeInput.value = '';
+            balanceModal.classList.remove('active');
+        } catch (e) {
+            showToast(e.message, 'error');
+        } finally {
+            promoBusy = false;
+            applyCodeBtn.disabled = false;
+        }
+    });
+
+    promoCodeInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyCodeBtn.click();
+    });
+}
+
+// ==================== CASE OPENING (cajas) ====================
+const openingModal = byId('openingModal');
+const closeOpeningBtn = byId('closeOpening');
+const rouletteTrack = byId('rouletteTrack');
+const wonItemDisplay = byId('wonItemDisplay');
+const contentsGrid = byId('contentsGrid');
+let stopRouletteTicks = null;
+
+function sfx() {
+    return window.SkinDropSfx || null;
+}
 
 function openCaseModal(caseId) {
+    if (!openingModal) return;
     const caseData = cases.find(c => c.id === caseId);
     if (!caseData || state.isSpinning) return;
-    
+
     if (state.balance < caseData.price) {
         showToast('Saldo insuficiente', 'error');
         return;
     }
-    
+
     state.currentCase = caseData;
-    
+
     // Show modal
     openingModal.classList.add('active');
     wonItemDisplay.classList.remove('active');
     rouletteTrack.style.display = 'flex';
     rouletteTrack.innerHTML = '';
-    
+
     // Update case name
-    document.getElementById('openingCaseName').textContent = caseData.name;
-    
+    byId('openingCaseName').textContent = caseData.name;
+
     // Show case contents
     showCaseContents(caseData);
-    
+
     // Start opening
     startCaseOpening(caseData);
 }
@@ -537,7 +642,7 @@ function showCaseContents(caseData) {
     contentsGrid.innerHTML = caseData.items.map((item, i) => {
         const rarity = getRarity(item);
         const chance = formatChance(chances[i]);
-        
+
         return `
             <div class="content-item ${rarity}">
                 <img src="${item.image}" alt="${item.name}">
@@ -555,7 +660,7 @@ function showCaseContents(caseData) {
 async function startCaseOpening(caseData) {
     if (state.isSpinning) return;
     state.isSpinning = true;
-    
+
     let out;
     try {
         out = await actions.openCase({ caseId: caseData.id });
@@ -567,18 +672,18 @@ async function startCaseOpening(caseData) {
     }
     const winner = hydrate(out.result.item);
     const winnerRarity = out.result.rarity;
-    
+
     // Generate roulette items (100 items)
     const rouletteItems = [];
     for (let i = 0; i < 100; i++) {
         const randomItem = caseData.items[Math.floor(Math.random() * caseData.items.length)];
         rouletteItems.push(randomItem);
     }
-    
+
     // Place winner at position 85-90
     const winnerPosition = 85 + Math.floor(Math.random() * 5);
     rouletteItems[winnerPosition] = winner;
-    
+
     // Render roulette
     rouletteTrack.innerHTML = rouletteItems.map(item => {
         const rarity = getRarity(item);
@@ -590,25 +695,30 @@ async function startCaseOpening(caseData) {
             </div>
         `;
     }).join('');
-    
+
     // Reset position
     rouletteTrack.style.transition = 'none';
     rouletteTrack.style.transform = 'translateX(0)';
-    
-    // Calculate scroll distance
-    const itemWidth = 140; // 130px width + 10px margin
+
+    // Measure the real layout (item size changes with the viewport): land on the winner's centre
     const containerWidth = document.querySelector('.roulette-container').offsetWidth;
-    const targetPosition = (winnerPosition * itemWidth) - (containerWidth / 2) + (itemWidth / 2);
-    
+    const winnerEl = rouletteTrack.children[winnerPosition];
+    const itemStep = rouletteTrack.children[1].offsetLeft - rouletteTrack.children[0].offsetLeft;
+    const targetPosition = winnerEl.offsetLeft + winnerEl.offsetWidth / 2 - containerWidth / 2;
+
     // Add some randomness to final position
     const randomOffset = (Math.random() - 0.5) * 40;
-    
+
     // Start animation after a small delay
     setTimeout(() => {
         rouletteTrack.style.transition = 'transform 5s cubic-bezier(0.15, 0.85, 0.2, 1)';
         rouletteTrack.style.transform = `translateX(-${targetPosition + randomOffset}px)`;
+        if (stopRouletteTicks) stopRouletteTicks();
+        if (sfx()) {
+            stopRouletteTicks = sfx().watchTranslate(rouletteTrack, { axis: 'x', step: itemStep, offset: containerWidth / 2 });
+        }
     }, 100);
-    
+
     // Show winner after animation
     setTimeout(() => {
         showWinner(winner, winnerRarity, out.reveal);
@@ -617,75 +727,106 @@ async function startCaseOpening(caseData) {
 
 function showWinner(winner, rarity, reveal) {
     state.isSpinning = false;
-    
+    if (stopRouletteTicks) { stopRouletteTicks(); stopRouletteTicks = null; }
+    if (sfx()) sfx().drop(rarity);
+
     // The drop is already in the inventory: make it visible now
     reveal();
-    
+
     // Hide roulette, show winner
     rouletteTrack.style.display = 'none';
     wonItemDisplay.classList.add('active');
-    
+
     // Update winner display
-    document.getElementById('wonItemImage').src = winner.image;
-    document.getElementById('wonItemImage').alt = winner.name;
-    document.getElementById('wonItemName').textContent = winner.name;
-    document.getElementById('wonItemName').style.color = getRarityColor(rarity);
-    document.getElementById('wonItemPrice').textContent = winner.price.toFixed(2) + '€';
-    
+    byId('wonItemImage').src = winner.image;
+    byId('wonItemImage').alt = winner.name;
+    byId('wonItemName').textContent = winner.name;
+    byId('wonItemName').style.color = getRarityColor(rarity);
+    byId('wonItemPrice').textContent = winner.price.toFixed(2) + '€';
+
     // Update glow color
     const glow = document.querySelector('.won-item-glow');
     glow.style.background = `radial-gradient(circle, ${getRarityColor(rarity)}40 0%, transparent 70%)`;
-    
+
     // Buttons act on this drop once (sell, or keep = leave it in the inventory)
     wonItemDisplay.dataset.uid = winner.uid;
     wonItemDisplay.dataset.price = String(winner.price);
     wonItemDisplay.dataset.claimed = '';
 }
 
-// Winner action buttons
-document.getElementById('sellBtn').addEventListener('click', async () => {
-    if (wonItemDisplay.dataset.claimed) return;
-    wonItemDisplay.dataset.claimed = '1';
-    try {
-        const { result } = await actions.sell({ uids: [wonItemDisplay.dataset.uid] });
-        showToast(`Vendido por ${result.amount.toFixed(2)}€`, 'success');
-    } catch (e) {
-        showToast(e.message, 'error');
-    }
-});
+function initCaseOpening() {
+    if (!openingModal || !rouletteTrack || !wonItemDisplay) return;
 
-document.getElementById('keepBtn').addEventListener('click', () => {
-    if (!wonItemDisplay.dataset.claimed) {
+    // Winner action buttons
+    byId('sellBtn').addEventListener('click', async () => {
+        if (wonItemDisplay.dataset.claimed) return;
         wonItemDisplay.dataset.claimed = '1';
-        showToast('Guardado en inventario', 'success');
-    }
-    openingModal.classList.remove('active');
-});
+        try {
+            const { result } = await actions.sell({ uids: [wonItemDisplay.dataset.uid] });
+            showToast(`Vendido por ${result.amount.toFixed(2)}€`, 'success');
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    });
 
-document.getElementById('openAgainBtn').addEventListener('click', () => {
-    if (state.isSpinning) return;
-    if (state.currentCase && state.balance >= state.currentCase.price) {
-        // An unclaimed drop simply stays in the inventory
-        wonItemDisplay.dataset.claimed = '1';
-        wonItemDisplay.classList.remove('active');
-        rouletteTrack.style.display = 'flex';
-        startCaseOpening(state.currentCase);
-    } else {
-        showToast('Saldo insuficiente', 'error');
-    }
-});
-
-closeOpeningBtn.addEventListener('click', () => {
-    if (!state.isSpinning) {
-        if (wonItemDisplay.classList.contains('active') && !wonItemDisplay.dataset.claimed) {
+    byId('keepBtn').addEventListener('click', () => {
+        if (!wonItemDisplay.dataset.claimed) {
             wonItemDisplay.dataset.claimed = '1';
             showToast('Guardado en inventario', 'success');
         }
         openingModal.classList.remove('active');
-    }
-});
+    });
 
-// ==================== INVENTORY ACTIONS ====================
+    byId('openAgainBtn').addEventListener('click', () => {
+        if (state.isSpinning) return;
+        if (state.currentCase && state.balance >= state.currentCase.price) {
+            // An unclaimed drop simply stays in the inventory
+            wonItemDisplay.dataset.claimed = '1';
+            wonItemDisplay.classList.remove('active');
+            rouletteTrack.style.display = 'flex';
+            startCaseOpening(state.currentCase);
+        } else {
+            showToast('Saldo insuficiente', 'error');
+        }
+    });
+
+    closeOpeningBtn.addEventListener('click', () => {
+        if (!state.isSpinning) {
+            if (wonItemDisplay.classList.contains('active') && !wonItemDisplay.dataset.claimed) {
+                wonItemDisplay.dataset.claimed = '1';
+                showToast('Guardado en inventario', 'success');
+            }
+            openingModal.classList.remove('active');
+        }
+    });
+}
+
+function initCasesGrid() {
+    const grid = byId('casesGrid');
+    if (!grid) return;
+
+    grid.addEventListener('click', (e) => {
+        const card = e.target.closest('.case-card[data-case-id]');
+        if (card) openCaseModal(Number(card.dataset.caseId));
+    });
+    grid.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const card = e.target.closest('.case-card[data-case-id]');
+        if (!card || e.target !== card) return;
+        e.preventDefault();
+        openCaseModal(Number(card.dataset.caseId));
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCases(btn.dataset.filter);
+        });
+    });
+}
+
+// ==================== INVENTORY ACTIONS (inventario) ====================
 async function sellInventoryItem(uid) {
     if (!state.inventory.some(i => i.uid === uid)) return;
     try {
@@ -696,79 +837,76 @@ async function sellInventoryItem(uid) {
     }
 }
 
-// ==================== FILTERS ====================
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderCases(btn.dataset.filter);
+function initInventory() {
+    const grid = byId('inventoryGrid');
+    if (!grid) return;
+    grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-sell-uid]');
+        if (btn) sellInventoryItem(btn.dataset.sellUid);
     });
-});
+}
 
 // ==================== TOAST NOTIFICATIONS ====================
 function showToast(message, type = 'success') {
     // Remove existing toasts
     document.querySelectorAll('.toast').forEach(t => t.remove());
-    
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <i class="toast-icon fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
+    toast.setAttribute('role', 'status');
+    const icon = document.createElement('i');
+    icon.className = `toast-icon fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}`;
+    const text = document.createElement('span');
+    text.textContent = message;
+    toast.append(icon, text);
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.style.animation = 'toastSlideIn 0.3s ease reverse';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// ==================== NAVIGATION ====================
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-        const href = link.getAttribute('href');
-        if (href && href.startsWith('#')) {
-            e.preventDefault();
-            const target = document.querySelector(href);
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-        }
-    });
-});
-
 // ==================== INITIALIZATION ====================
+initBalanceModal();
+initCaseOpening();
+initCasesGrid();
+initInventory();
+
 document.addEventListener('DOMContentLoaded', () => {
     // Guest state first; auth.js switches to the server profile after /api/me
     auth = loadGuestState();
     refreshDisplay();
+    renderFeaturedCases();
     initLiveFeed();
-    
-    // Update live feed periodically
-    setInterval(initLiveFeed, 30000);
+
+    // Update live feed periodically (index only)
+    if (byId('liveFeed')) setInterval(initLiveFeed, 30000);
 });
 
-// Make sellInventoryItem globally accessible
+// Kept global for compatibility
 window.sellInventoryItem = sellInventoryItem;
+window.openCaseModal = openCaseModal;
 
-// Shared API for feature modules (upgrader.js, battles.js, auth.js).
-// `state` is read-only for them: every change goes through `actions`.
+// Shared API for feature modules (upgrader.js, battles.js, auth.js, and future pages).
+// `state` is read-only for them: every change goes through `actions`, or through
+// `applyServerState` / `refreshState` when a script calls its own endpoint (see `api`).
 window.SkinDrop = {
     get state() { return state; },
     get mode() { return mode; },
     get steamId() { return serverSteamId; },
     actions,
+    api,                 // api.get(url) / api.post(url, body) -> parsed JSON; throws Error with .status / .code
     updateUI,
+    refreshState,        // () => Promise<state>: re-fetch /api/state (logged in) or re-read local data, then updateUI
+    applyServerState,    // (state | {state}) => boolean: replace the profile with a server response, then updateUI
     renderCases: () => renderCases(currentFilter),
     switchProfile,
     setServerMode,
     useGuestMode,
     showToast,
+    escapeHtml,
     itemImage,
     hydrate,
     rollItem,

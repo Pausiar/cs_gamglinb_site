@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking — SkinDrop</title>
+    <meta name="description" content="Ranking de jugadores de SkinDrop: clasificación por ganancias y mejores drops. Próximamente.">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-page="ranking">
+    <div id="siteHeader"></div>
+
+    <main class="main-content">
+        <section class="page-section" id="ranking-section">
+            <div class="section-header">
+                <h2><i class="fas fa-trophy"></i> RANKING</h2>
+            </div>
+            <!-- Feature script renders into #leaderboardRoot (see the module that fills this page) -->
+            <div id="leaderboardRoot" data-root></div>
+            <!-- Placeholder: hidden automatically as soon as #leaderboardRoot has content; delete it when the page is implemented -->
+            <div class="placeholder-card" data-placeholder>
+                <i class="fas fa-trophy"></i>
+                <h3>Próximamente</h3>
+                <p>Aquí aparecerá la clasificación de jugadores con las mayores ganancias y los mejores drops.</p>
+                <a href="/cajas" data-page-link="cajas" class="cta-button"><i class="fas fa-box-open"></i> Ir a Cajas</a>
+            </div>
+        </section>
+    </main>
+
+    <div id="siteFooter"></div>
+
+    <script src="js/layout.js"></script>
+    <script src="js/sfx.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

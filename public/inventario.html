@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario — SkinDrop</title>
+    <meta name="description" content="Tu inventario de SkinDrop: consulta tus skins virtuales y véndelas por saldo.">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/inventory.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-page="inventario">
+    <div id="siteHeader"></div>
+
+    <main class="main-content">
+        <section class="inventory-section" id="inventory">
+            <div class="section-header">
+                <h2><i class="fas fa-briefcase"></i> TU INVENTARIO</h2>
+                <div class="inventory-value">
+                    Valor Total: <span id="inventoryValue">0.00€</span>
+                </div>
+            </div>
+            <div class="inventory-grid" id="inventoryGrid">
+                <p class="no-items">Tu inventario está vacío</p>
+            </div>
+        </section>
+    </main>
+
+    <div id="siteFooter"></div>
+
+    <script src="js/layout.js"></script>
+    <script src="js/sfx.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

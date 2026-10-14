@@ -67,6 +67,10 @@
         return window.SkinDrop;
     }
 
+    function sfx() {
+        return window.SkinDropSfx || null;
+    }
+
     function allCases() {
         return typeof cases !== 'undefined' ? cases : [];
     }
@@ -502,9 +506,17 @@
             track.style.transition = `transform ${duration}ms cubic-bezier(0.12, 0.8, 0.18, 1)`;
             track.style.transform = `translateY(${-offset}px)`;
             el.classList.add('is-spinning');
+            // One ticking reel is enough (all seats spin together)
+            if (i === 0 && sfx()) {
+                if (b.stopTicks) b.stopTicks();
+                b.stopTicks = sfx().watchTranslate(track, {
+                    axis: 'y', step: itemH, offset: reel.clientHeight / 2, maxMs: duration + 500
+                });
+            }
         });
 
         b.timer = setTimeout(() => {
+            if (b.stopTicks) { b.stopTicks(); b.stopTicks = null; }
             // Snap exactly onto the drop before revealing it
             b.seats.forEach((seat, i) => {
                 const el = seatEl(i);
@@ -562,6 +574,7 @@
         });
         updateTotalsUI(b);
         updateRoundHeader(b, Math.min(b.revealed, b.cases.length - 1));
+        if (sfx() && !b.silent) sfx().reveal();
     }
 
     function updateTotalsUI(b) {
@@ -612,6 +625,8 @@
         const b = battle;
         if (!b || b.settled) return;
         clearTimeout(b.timer);
+        if (b.stopTicks) { b.stopTicks(); b.stopTicks = null; }
+        b.silent = true;   // no pops for the rounds that are skipped
         while (b.revealed < b.cases.length) revealRound(b, b.revealed);
         snapReelsToEnd(b);
         finishBattle(b);
@@ -646,9 +661,24 @@
         if (recent.length > RECENT_LIMIT) recent.length = RECENT_LIMIT;
     }
 
+    // Final jingle: fanfare for a win that includes a covert / gold item, chime for a win, thud for a loss
+    function playOutcomeSound(b) {
+        if (!sfx()) return;
+        const res = b.result;
+        if (!res.won) { sfx().lose(); return; }
+        const rare = b.rolls.some(row => row.some(item => {
+            const r = rarityOf(item);
+            return r === 'covert' || r === 'gold';
+        }));
+        if (rare) sfx().rare(); else sfx().win();
+    }
+
     function finishBattle(b) {
         if (b !== battle) return;
-        if (!b.settled) settle(b);
+        if (!b.settled) {
+            settle(b);
+            playOutcomeSound(b);
+        }
         if (ui.view === 'arena' && root.querySelector('.battle-arena')) renderResult(b);
     }
 

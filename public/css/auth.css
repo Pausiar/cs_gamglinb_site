@@ -231,7 +231,8 @@
     }
 }
 
-@media (max-width: 700px) {
+/* Icon-only login button while the header also holds the hamburger and the balance */
+@media (max-width: 860px) {
     .auth-steam-btn {
         width: 40px;
         padding: 0;

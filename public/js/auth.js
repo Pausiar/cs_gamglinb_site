@@ -45,6 +45,13 @@
         }
     }
 
+    // After the Steam round trip the server sends the user back to the page they came from
+    // (it only accepts simple page paths such as /cajas)
+    function loginHref() {
+        const path = window.location.pathname;
+        return /^\/[a-z0-9-]+$/.test(path) ? '/auth/steam?next=' + encodeURIComponent(path) : '/auth/steam';
+    }
+
     // ==================== RENDER ====================
     function renderLoading() {
         container.innerHTML = `
@@ -67,7 +74,7 @@
 
     function renderLoggedOut() {
         container.innerHTML = `
-            <a class="auth-steam-btn" href="/auth/steam" title="Iniciar sesión con Steam">
+            <a class="auth-steam-btn" href="${escapeHtml(loginHref())}" title="Iniciar sesión con Steam">
                 <i class="fa-brands fa-steam"></i>
                 <span class="auth-btn-text">Iniciar sesión con Steam</span>
             </a>`;
