@@ -1,1 +1,40 @@
 /* Themed case cards (see js/case-art.js) */
+
+/* Artwork is a rounded tile with its own background: let it fill the frame. */
+.case-image img {
+    width: 82%;
+    height: 82%;
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
+    transition: transform 0.35s ease, filter 0.35s ease;
+    will-change: transform;
+}
+
+.case-card:hover .case-image img {
+    transform: translateY(-4px) scale(1.07) rotate(-2deg);
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.55)) brightness(1.08);
+}
+
+/* Soft light sweep across the artwork on hover */
+.case-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.10) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+}
+
+.case-card:hover .case-image::after {
+    transform: translateX(120%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .case-image img,
+    .case-image::after {
+        transition: none;
+    }
+    .case-card:hover .case-image img {
+        transform: none;
+    }
+}
