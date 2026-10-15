@@ -1,0 +1,128 @@
+/* Placeholder and static text pages (recompensas, ranking, provably-fair, terminos, privacidad, contacto) */
+
+.placeholder-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    padding: 50px 24px;
+    background: var(--bg-card);
+    border: 1px dashed rgba(255, 107, 53, 0.35);
+    border-radius: 16px;
+}
+
+.placeholder-card > i {
+    font-size: 40px;
+    color: var(--accent-primary);
+}
+
+.placeholder-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+}
+
+.placeholder-card p {
+    color: var(--text-secondary);
+    max-width: 560px;
+    line-height: 1.5;
+}
+
+.placeholder-card .cta-button {
+    margin-top: 6px;
+    padding: 12px 28px;
+    font-size: 16px;
+}
+
+/* The placeholder disappears by itself once a feature script fills the root before it */
+[data-root]:not(:empty) ~ [data-placeholder] {
+    display: none;
+}
+
+/* Long-form text (legal pages) */
+.legal {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    color: var(--text-secondary);
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.legal .legal-updated {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.legal h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 17px;
+    color: var(--text-primary);
+    margin-top: 10px;
+}
+
+.legal ul {
+    padding-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.legal a {
+    color: var(--accent-primary);
+}
+
+.legal code {
+    padding: 1px 6px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--accent-secondary);
+}
+
+.legal strong {
+    color: var(--text-primary);
+}
+
+.legal-notice {
+    padding: 16px 18px;
+    background: rgba(255, 107, 53, 0.08);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-left-width: 4px;
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+}
+
+.contact-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 22px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+.contact-card > i {
+    font-size: 24px;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.contact-card strong {
+    display: block;
+    color: var(--text-primary);
+}
+
+@media (max-width: 700px) {
+    .legal {
+        font-size: 16px;
+    }
+
+    .placeholder-card {
+        padding: 36px 16px;
+    }
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cajas — SkinDrop</title>
+    <meta name="description" content="Todas las cajas de CS2 de SkinDrop: filtra por precio, mira el contenido y las probabilidades y abre cajas con saldo virtual.">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/cases.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-page="cajas">
+    <div id="siteHeader"></div>
+
+    <main class="main-content">
+        <!-- Cases -->
+        <section class="cases-section" id="cases">
+            <div class="section-header">
+                <h2><i class="fas fa-boxes"></i> CAJAS DISPONIBLES</h2>
+                <div class="case-filters">
+                    <button type="button" class="filter-btn active" data-filter="all">Todas</button>
+                    <button type="button" class="filter-btn" data-filter="cheap">Económicas</button>
+                    <button type="button" class="filter-btn" data-filter="medium">Medias</button>
+                    <button type="button" class="filter-btn" data-filter="expensive">Premium</button>
+                </div>
+            </div>
+            <div class="cases-grid" id="casesGrid">
+                <!-- Cases will be populated by JS -->
+            </div>
+        </section>
+
+        <!-- Opening Modal -->
+        <div class="opening-modal" id="openingModal">
+            <div class="opening-content">
+                <button type="button" class="close-opening" id="closeOpening" aria-label="Cerrar">&times;</button>
+                <h2 id="openingCaseName">Abriendo Caja...</h2>
+
+                <!-- Roulette Container -->
+                <div class="roulette-container">
+                    <div class="roulette-pointer"></div>
+                    <div class="roulette-track" id="rouletteTrack">
+                        <!-- Items will be populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Won Item Display -->
+                <div class="won-item-display" id="wonItemDisplay">
+                    <div class="won-item-glow"></div>
+                    <img src="" alt="" id="wonItemImage">
+                    <div class="won-item-info">
+                        <h3 id="wonItemName"></h3>
+                        <p id="wonItemPrice"></p>
+                    </div>
+                    <div class="won-actions">
+                        <button type="button" class="sell-btn" id="sellBtn">
+                            <i class="fas fa-coins"></i> Vender
+                        </button>
+                        <button type="button" class="keep-btn" id="keepBtn">
+                            <i class="fas fa-briefcase"></i> Guardar
+                        </button>
+                        <button type="button" class="open-again-btn" id="openAgainBtn">
+                            <i class="fas fa-redo"></i> Abrir Otra
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Case Contents Preview -->
+                <div class="case-contents">
+                    <h3><i class="fas fa-list"></i> Contenido de la Caja</h3>
+                    <div class="contents-grid" id="contentsGrid">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="siteFooter"></div>
+
+    <script src="js/layout.js"></script>
+    <script src="js/sfx.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/case-art.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

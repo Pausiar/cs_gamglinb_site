@@ -1,0 +1,112 @@
+/* ==================== INVENTORY SECTION ==================== */
+.inventory-section {
+    padding: 60px 20px;
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.inventory-value {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.inventory-value span {
+    color: var(--accent-secondary);
+    font-weight: 700;
+    font-size: 22px;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 20px;
+}
+
+.no-items {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 60px 20px;
+    background: var(--bg-card);
+    border-radius: 16px;
+}
+
+.inventory-item {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border: 2px solid;
+    transition: var(--transition-fast);
+}
+
+.inventory-item:hover {
+    transform: translateY(-5px);
+}
+
+.inventory-item.consumer { border-color: var(--rarity-consumer); }
+.inventory-item.industrial { border-color: var(--rarity-industrial); }
+.inventory-item.milspec { border-color: var(--rarity-milspec); }
+.inventory-item.restricted { border-color: var(--rarity-restricted); }
+.inventory-item.classified { border-color: var(--rarity-classified); }
+.inventory-item.covert { border-color: var(--rarity-covert); }
+.inventory-item.gold { border-color: var(--rarity-gold); }
+
+.inventory-item img {
+    width: 100px;
+    height: 75px;
+    object-fit: contain;
+}
+
+.inventory-item-name {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.inventory-item-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-secondary);
+}
+
+.inventory-sell-btn {
+    padding: 8px 16px;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    width: 100%;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.inventory-sell-btn:hover {
+    background: #ff8555;
+}
+
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 480px) {
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+    }
+}

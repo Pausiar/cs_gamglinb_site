@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#0a0a0f"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#ff6b35" stroke-opacity=".35" stroke-width="3"/>
+  <!-- open crate: body, lid flaps, light coming out -->
+  <path d="M32 6 L38 22 H26 Z" fill="#f7c94b" opacity=".85"/>
+  <path d="M14 30 L32 22 L50 30 L32 38 Z" fill="#ff8555"/>
+  <path d="M14 30 V47 L32 55 V38 Z" fill="#ff6b35"/>
+  <path d="M50 30 V47 L32 55 V38 Z" fill="#c9481a"/>
+  <path d="M14 30 L8 24 L26 17 L32 22 Z" fill="#ffb27d"/>
+  <path d="M50 30 L56 24 L38 17 L32 22 Z" fill="#ffb27d"/>
+</svg>

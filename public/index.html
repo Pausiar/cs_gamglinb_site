@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinDrop — Apertura de cajas CS2</title>
+    <meta name="description" content="SkinDrop: simulador de apertura de cajas de CS2 con upgrader y batallas de cajas. Solo entretenimiento, sin dinero real.">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/cases.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/feed.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-page="inicio" class="has-live-feed">
+    <div id="siteHeader"></div>
+
+    <main class="main-content">
+        <!-- Live feed strip (real drops from /api/feed, js/feed.js) -->
+        <div class="live-feed">
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+            <div class="live-feed-items" id="liveFeed">
+                <!-- Filled by js/feed.js -->
+            </div>
+        </div>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>ABRE CAJAS Y GANA <span class="accent">SKINS INCREÍBLES</span></h1>
+                <p>La mejor plataforma de apertura de cajas CS2. ¡Prueba tu suerte y consigue skins legendarias!</p>
+                <a href="/cajas" data-page-link="cajas" class="cta-button">
+                    <i class="fas fa-box-open"></i> ABRIR CAJAS
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalOpened">0</span>
+                    <span class="stat-label">Cajas Abiertas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="totalWon">0.00€</span>
+                    <span class="stat-label">Total Ganado</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="bestDrop">-</span>
+                    <span class="stat-label">Mejor Drop</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured cases (js/app.js renders 4 cards into #featuredCases) -->
+        <section class="home-section" aria-labelledby="featuredTitle">
+            <div class="section-header">
+                <h2 id="featuredTitle"><i class="fas fa-star"></i> CAJAS DESTACADAS</h2>
+                <a href="/cajas" data-page-link="cajas" class="section-link">Ver todas las cajas <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="featured-cases" id="featuredCases"></div>
+        </section>
+
+        <!-- Other sections -->
+        <section class="home-section" aria-labelledby="exploreTitle">
+            <div class="section-header">
+                <h2 id="exploreTitle"><i class="fas fa-compass"></i> EXPLORA SKINDROP</h2>
+            </div>
+            <div class="feature-cards">
+                <a href="/upgrader" data-page-link="upgrader" class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-arrow-up"></i></div>
+                    <h3>Upgrader</h3>
+                    <p>Apuesta tus skins o saldo y gira la ruleta para conseguir una skin más valiosa.</p>
+                    <span class="feature-go">Ir al Upgrader <i class="fas fa-arrow-right"></i></span>
+                </a>
+                <a href="/batallas" data-page-link="batallas" class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-crosshairs"></i></div>
+                    <h3>Batallas de cajas</h3>
+                    <p>Abre las mismas cajas contra bots: el mejor total se lleva todos los objetos.</p>
+                    <span class="feature-go">Ir a Batallas <i class="fas fa-arrow-right"></i></span>
+                </a>
+                <a href="/recompensas" data-page-link="recompensas" class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-gift"></i></div>
+                    <h3>Recompensas</h3>
+                    <p>Caja gratuita diaria y más bonificaciones para tu saldo virtual.</p>
+                    <span class="feature-go">Ver Recompensas <i class="fas fa-arrow-right"></i></span>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <div id="siteFooter"></div>
+
+    <script src="js/layout.js"></script>
+    <script src="js/sfx.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/case-art.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/feed.js"></script>
+</body>
+</html>

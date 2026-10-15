@@ -1,0 +1,690 @@
+/* ==================== VARIABLES ==================== */
+:root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #12121a;
+    --bg-tertiary: #1a1a25;
+    --bg-card: #16161f;
+    --accent-primary: #ff6b35;
+    --accent-secondary: #f7c94b;
+    --accent-gold: #ffd700;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0b0;
+    --text-muted: #6a6a7a;
+    
+    /* Rarity Colors */
+    --rarity-consumer: #b0c3d9;
+    --rarity-industrial: #5e98d9;
+    --rarity-milspec: #4b69ff;
+    --rarity-restricted: #8847ff;
+    --rarity-classified: #d32ce6;
+    --rarity-covert: #eb4b4b;
+    --rarity-gold: #ffd700;
+    
+    --shadow-glow: 0 0 30px rgba(255, 107, 53, 0.3);
+    --border-radius: 8px;
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    
+    /* Layout */
+    --header-height: 70px;
+    --live-feed-height: 50px;
+    --content-max-width: 1400px;
+}
+
+/* ==================== RESET ==================== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    /* The fixed header sits on top of anchor targets (the home page adds the live feed, see home.css) */
+    scroll-padding-top: var(--header-height);
+}
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==================== HEADER (markup injected by js/layout.js) ==================== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    background: rgba(10, 10, 15, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+.header-container {
+    width: 100%;
+    max-width: var(--content-max-width);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+    height: 100%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.logo i {
+    color: var(--accent-primary);
+    font-size: 28px;
+}
+
+.logo .accent {
+    color: var(--accent-primary);
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: safe center;
+    gap: 4px;
+    /* Never wrap: if the links ever don't fit, the strip scrolls sideways */
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.nav-menu::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition-fast);
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--accent-primary);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.balance-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-tertiary);
+    padding: 8px 12px 8px 16px;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.balance-container i {
+    color: var(--accent-secondary);
+    flex-shrink: 0;
+}
+
+.balance {
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent-secondary);
+    min-width: 60px;
+}
+
+.add-balance-btn {
+    background: var(--accent-primary);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.add-balance-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+}
+
+/* Header icon buttons: sound mute toggle (js/sfx.js) and mobile menu */
+.sfx-toggle,
+.nav-toggle {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-radius: var(--border-radius);
+    color: var(--accent-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.sfx-toggle:hover,
+.nav-toggle:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.sfx-toggle.is-muted {
+    color: var(--text-muted);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.nav-toggle {
+    display: none;
+}
+
+.sfx-toggle:focus-visible,
+.nav-toggle:focus-visible,
+.nav-link:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    place-items: center;
+}
+
+.modal.active {
+    display: grid;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    width: min(90%, 500px);
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header h2 i {
+    color: var(--accent-secondary);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 28px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: var(--accent-primary);
+}
+
+.modal-body {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.promo-code-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.promo-code-section label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.promo-input-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.promo-input-wrapper input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.promo-input-wrapper input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.apply-code-btn {
+    padding: 12px 24px;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.apply-code-btn:hover {
+    background: #ff8555;
+    transform: translateY(-2px);
+}
+
+.promo-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.payment-methods h3 {
+    color: var(--text-secondary);
+}
+
+.coming-soon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+}
+
+/* ==================== MAIN CONTENT ==================== */
+/* Every page: <main class="main-content"> holding one or more sections */
+.main-content {
+    flex: 1;
+    padding-top: var(--header-height);
+    display: flex;
+    flex-direction: column;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.section-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(20px, 3vw, 28px);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.section-header h2 i {
+    color: var(--accent-primary);
+}
+
+/* ==================== FOOTER ==================== */
+.footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid rgba(255, 107, 53, 0.2);
+    padding: 40px 20px;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.footer-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-logo i {
+    color: var(--accent-primary);
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+    font-size: 14px;
+}
+
+.footer-links a:hover {
+    color: var(--accent-primary);
+}
+
+.footer-disclaimer {
+    color: var(--text-muted);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 15px 25px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--accent-primary);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 5000;
+    animation: toastSlideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: calc(100% - 60px);
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.success {
+    border-left-color: #4ade80;
+}
+
+.toast.error {
+    border-left-color: #f87171;
+}
+
+.toast-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.toast.success .toast-icon {
+    color: #4ade80;
+}
+
+.toast.error .toast-icon {
+    color: #f87171;
+}
+
+
+/* ==================== CALL TO ACTION BUTTON ==================== */
+.cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 40px;
+    background: linear-gradient(135deg, var(--accent-primary), #ff8555);
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 50px;
+    transition: var(--transition-medium);
+    box-shadow: 0 5px 30px rgba(255, 107, 53, 0.4);
+}
+
+.cta-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 40px rgba(255, 107, 53, 0.5);
+}
+
+/* ==================== GENERIC PAGE SECTION ==================== */
+/* Same box as .cases-section / .upgrader-section / ... : use it for new pages */
+.page-section {
+    padding: 60px 20px;
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+}
+
+/* ==================== RESPONSIVE ==================== */
+/* Eight nav links + balance + sound + auth button: the inline nav is text-only and gets tighter as the
+   viewport narrows; below 1320px the links collapse into a drawer (toggled by js/layout.js, which
+   must use the same breakpoint). */
+.nav-link i {
+    display: none;
+}
+
+@media (max-width: 1500px) {
+    .header-container { gap: 16px; }
+    .nav-menu { gap: 2px; }
+    .nav-link { font-size: 14px; padding: 8px 8px; }
+}
+
+@media (max-width: 1320px) {
+    .header-container {
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas: "logo actions burger";
+        gap: 12px;
+    }
+
+    .logo { grid-area: logo; font-size: 22px; }
+    .logo i { font-size: 24px; }
+    .header-actions { grid-area: actions; justify-self: end; }
+    .nav-toggle { grid-area: burger; display: inline-flex; }
+
+    /* Drawer under the header */
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 2px;
+        padding: 10px 15px 16px;
+        max-height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        background: rgba(10, 10, 15, 0.98);
+        border-bottom: 1px solid rgba(255, 107, 53, 0.3);
+        box-shadow: 0 18px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .nav-menu.is-open { display: flex; }
+
+    .nav-link {
+        font-size: 17px;
+        gap: 12px;
+        padding: 13px 14px;
+    }
+
+    .nav-link i {
+        display: inline-block;
+        width: 22px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 700px) {
+    :root {
+        --header-height: auto;
+    }
+
+    /* On phones the header is in the page flow (height is content-driven),
+       so nothing is fixed on top of the content and no scroll offset is needed */
+    html {
+        scroll-padding-top: 0;
+    }
+
+    .header {
+        position: relative;
+        height: auto;
+        padding: 10px 15px;
+    }
+
+    .header-container {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "logo burger"
+            "actions actions";
+        gap: 10px;
+    }
+
+    /* Second row: balance grows, sound and Steam buttons keep their size */
+    .header-actions {
+        justify-self: stretch;
+        min-width: 0;
+        max-width: 100%;
+        gap: 8px;
+    }
+
+    .balance-container {
+        flex: 1;
+        min-width: 0;
+        padding: 6px 8px 6px 12px;
+    }
+
+    .balance {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 17px;
+    }
+
+    .nav-menu { max-height: none; }
+
+    .main-content { padding-top: 0; }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+

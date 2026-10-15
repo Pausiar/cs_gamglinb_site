@@ -1,0 +1,290 @@
+/* auth styles (see js/auth.js) */
+.auth-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.auth-container:empty {
+    display: none;
+}
+
+/* ==================== STEAM BUTTON ==================== */
+.auth-steam-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(102, 192, 244, 0.35);
+    background: linear-gradient(135deg, #171a21 0%, #1b2838 55%, #2a475e 100%);
+    color: #c7d5e0;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    user-select: none;
+}
+
+.auth-steam-btn i {
+    font-size: 20px;
+    color: #66c0f4;
+    flex-shrink: 0;
+}
+
+.auth-steam-btn:hover,
+.auth-steam-btn:focus-visible {
+    color: #ffffff;
+    border-color: #66c0f4;
+    box-shadow: 0 0 15px rgba(102, 192, 244, 0.35);
+    outline: none;
+}
+
+.auth-steam-btn.auth-disabled,
+.auth-steam-btn.auth-loading {
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+}
+
+.auth-steam-btn.auth-loading {
+    cursor: progress;
+}
+
+.auth-steam-btn.auth-disabled:hover,
+.auth-steam-btn.auth-loading:hover {
+    color: #c7d5e0;
+    border-color: rgba(102, 192, 244, 0.35);
+    box-shadow: none;
+}
+
+/* ==================== USER MENU ==================== */
+.auth-user {
+    position: relative;
+}
+
+.auth-user-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    max-width: 220px;
+    padding: 0 12px 0 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(102, 192, 244, 0.3);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.auth-user-btn:hover,
+.auth-user-btn:focus-visible,
+.auth-open .auth-user-btn {
+    border-color: #66c0f4;
+    box-shadow: 0 0 12px rgba(102, 192, 244, 0.25);
+    outline: none;
+}
+
+.auth-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid rgba(102, 192, 244, 0.4);
+}
+
+.auth-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #171a21, #2a475e);
+    color: #66c0f4;
+    font-size: 18px;
+}
+
+.auth-user-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.auth-caret {
+    font-size: 11px;
+    color: var(--text-secondary);
+    transition: transform var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.auth-open .auth-caret {
+    transform: rotate(180deg);
+}
+
+.auth-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    padding: 6px;
+    z-index: 1100;
+    animation: authMenuIn 0.15s ease;
+}
+
+.auth-menu[hidden] {
+    display: none;
+}
+
+@keyframes authMenuIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-menu-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 10px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    overflow: hidden;
+}
+
+.auth-menu-header i {
+    color: #66c0f4;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.auth-menu-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
+
+.auth-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.auth-menu-item i {
+    width: 16px;
+    text-align: center;
+}
+
+.auth-menu-item:hover,
+.auth-menu-item:focus-visible {
+    background: rgba(255, 107, 53, 0.1);
+    color: var(--accent-primary);
+    outline: none;
+}
+
+.auth-logout:hover,
+.auth-logout:focus-visible {
+    background: rgba(235, 75, 75, 0.12);
+    color: var(--rarity-covert);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1100px) {
+    .auth-steam-btn {
+        padding: 0 12px;
+        font-size: 14px;
+    }
+
+    .auth-user-btn {
+        max-width: 160px;
+    }
+}
+
+/* Icon-only login button while the header also holds the hamburger and the balance */
+@media (max-width: 860px) {
+    .auth-steam-btn {
+        width: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .auth-btn-text,
+    .auth-user-name {
+        display: none;
+    }
+
+    .auth-user-btn {
+        padding: 0 8px 0 4px;
+        gap: 6px;
+    }
+}
+
+/* ==================== RETRY BUTTON (profile could not be loaded) ==================== */
+button.auth-steam-btn {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* ==================== LOADING STATE (js/app.js: html.sd-loading) ==================== */
+/* A logged-in user's server profile is on its way: balance shows "…", actions are refused */
+html.sd-loading #balance {
+    animation: sdLoadingPulse 1s ease-in-out infinite;
+}
+
+html.sd-loading .case-card[data-case-id],
+html.sd-loading .open-btn,
+html.sd-loading .inventory-sell-btn,
+html.sd-loading .apply-code-btn {
+    cursor: progress;
+    opacity: 0.6;
+}
+
+@keyframes sdLoadingPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.sd-loading #balance {
+        animation: none;
+    }
+}
+
+.toast.info {
+    border-left-color: var(--accent-primary);
+}
+
+.toast.info .toast-icon {
+    color: var(--accent-primary);
+}

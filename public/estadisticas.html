@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas — SkinDrop</title>
+    <meta name="description" content="Tus estadísticas en SkinDrop: cajas abiertas, gasto, ganancias, historial de drops y drops por rareza.">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/stats.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-page="estadisticas">
+    <div id="siteHeader"></div>
+
+    <main class="main-content">
+        <section class="stats-section" id="stats">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-bar"></i> TUS ESTADÍSTICAS</h2>
+            </div>
+            <div class="stats-container">
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-box-open"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statCasesOpened">0</span>
+                        <span class="stats-label">Cajas Abiertas</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-coins"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statTotalSpent">0.00€</span>
+                        <span class="stats-label">Total Gastado</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statTotalWon">0.00€</span>
+                        <span class="stats-label">Total Ganado</span>
+                    </div>
+                </div>
+                <div class="stats-card profit">
+                    <div class="stats-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="stats-info">
+                        <span class="stats-value" id="statProfit">0.00€</span>
+                        <span class="stats-label">Beneficio/Pérdida</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drop History -->
+            <div class="drop-history">
+                <h3><i class="fas fa-history"></i> Historial de Drops</h3>
+                <div class="history-list" id="historyList">
+                    <p class="no-history">Aún no has abierto ninguna caja</p>
+                </div>
+            </div>
+
+            <!-- Rarity Stats -->
+            <div class="rarity-stats">
+                <h3><i class="fas fa-gem"></i> Drops por Rareza</h3>
+                <div class="rarity-bars" id="rarityBars">
+                    <div class="rarity-bar consumer">
+                        <span class="rarity-name">Consumer Grade</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="consumer" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countConsumer">0</span>
+                    </div>
+                    <div class="rarity-bar industrial">
+                        <span class="rarity-name">Industrial Grade</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="industrial" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countIndustrial">0</span>
+                    </div>
+                    <div class="rarity-bar milspec">
+                        <span class="rarity-name">Mil-Spec</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="milspec" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countMilspec">0</span>
+                    </div>
+                    <div class="rarity-bar restricted">
+                        <span class="rarity-name">Restricted</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="restricted" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countRestricted">0</span>
+                    </div>
+                    <div class="rarity-bar classified">
+                        <span class="rarity-name">Classified</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="classified" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countClassified">0</span>
+                    </div>
+                    <div class="rarity-bar covert">
+                        <span class="rarity-name">Covert</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="covert" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countCovert">0</span>
+                    </div>
+                    <div class="rarity-bar gold">
+                        <span class="rarity-name">★ Rare Special</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" data-rarity="gold" style="width: 0%"></div>
+                        </div>
+                        <span class="rarity-count" id="countGold">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="siteFooter"></div>
+
+    <script src="js/layout.js"></script>
+    <script src="js/sfx.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

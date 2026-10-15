@@ -1,0 +1,284 @@
+/* ==================== STATS SECTION ==================== */
+.stats-section {
+    padding: 60px 20px;
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.stats-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--transition-fast);
+}
+
+.stats-card:hover {
+    border-color: rgba(255, 107, 53, 0.3);
+    transform: translateY(-3px);
+}
+
+.stats-card.profit .stats-value {
+    color: #4ade80;
+}
+
+.stats-card.profit.negative .stats-value {
+    color: #f87171;
+}
+
+.stats-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--accent-primary), #ff8555);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.stats-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stats-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(18px, 2vw, 24px);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stats-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ==================== DROP HISTORY ==================== */
+.drop-history {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.drop-history h3 {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.drop-history h3 i {
+    color: var(--accent-primary);
+}
+
+.history-list {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.no-history {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+}
+
+.history-item {
+    display: grid;
+    grid-template-columns: 50px 1fr auto auto;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    background: var(--bg-tertiary);
+    border-left: 3px solid;
+}
+
+.history-item.consumer { border-left-color: var(--rarity-consumer); }
+.history-item.industrial { border-left-color: var(--rarity-industrial); }
+.history-item.milspec { border-left-color: var(--rarity-milspec); }
+.history-item.restricted { border-left-color: var(--rarity-restricted); }
+.history-item.classified { border-left-color: var(--rarity-classified); }
+.history-item.covert { border-left-color: var(--rarity-covert); }
+.history-item.gold { border-left-color: var(--rarity-gold); }
+
+.history-item img {
+    width: 50px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.history-item-info {
+    min-width: 0;
+}
+
+.history-item-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item-case {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.history-item-price {
+    font-weight: 700;
+    color: var(--accent-secondary);
+    white-space: nowrap;
+}
+
+.history-item-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ==================== RARITY STATS ==================== */
+.rarity-stats {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.rarity-stats h3 {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rarity-stats h3 i {
+    color: var(--accent-primary);
+}
+
+.rarity-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rarity-bar {
+    display: grid;
+    grid-template-columns: 130px 1fr 40px;
+    align-items: center;
+    gap: 15px;
+}
+
+.rarity-name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rarity-bar.consumer .rarity-name { color: var(--rarity-consumer); }
+.rarity-bar.industrial .rarity-name { color: var(--rarity-industrial); }
+.rarity-bar.milspec .rarity-name { color: var(--rarity-milspec); }
+.rarity-bar.restricted .rarity-name { color: var(--rarity-restricted); }
+.rarity-bar.classified .rarity-name { color: var(--rarity-classified); }
+.rarity-bar.covert .rarity-name { color: var(--rarity-covert); }
+.rarity-bar.gold .rarity-name { color: var(--rarity-gold); }
+
+.bar-container {
+    height: 16px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.5s ease;
+}
+
+.bar-fill[data-rarity="consumer"] { background: var(--rarity-consumer); }
+.bar-fill[data-rarity="industrial"] { background: var(--rarity-industrial); }
+.bar-fill[data-rarity="milspec"] { background: var(--rarity-milspec); }
+.bar-fill[data-rarity="restricted"] { background: var(--rarity-restricted); }
+.bar-fill[data-rarity="classified"] { background: var(--rarity-classified); }
+.bar-fill[data-rarity="covert"] { background: var(--rarity-covert); }
+.bar-fill[data-rarity="gold"] { background: var(--rarity-gold); }
+
+.rarity-count {
+    text-align: right;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1100px) {
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .history-item {
+        grid-template-columns: 40px 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .history-item img {
+        grid-row: 1 / 3;
+    }
+
+    .history-item-price,
+    .history-item-time {
+        grid-column: 2;
+    }
+
+    .rarity-bar {
+        grid-template-columns: 100px 1fr 35px;
+        gap: 10px;
+    }
+
+    .rarity-name {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rarity-bar {
+        grid-template-columns: 80px 1fr 30px;
+        gap: 8px;
+    }
+}
