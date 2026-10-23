@@ -688,3 +688,115 @@ body {
     background: var(--accent-primary);
 }
 
+
+/* ==================== LEGAL NOTICE (injected by js/layout.js) ==================== */
+.legal-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 18px;
+    padding: 8px 16px;
+    background: rgba(255, 107, 53, 0.08);
+    border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.legal-bar strong { color: var(--text-primary); }
+.legal-bar i { color: var(--accent-primary); margin-right: 4px; }
+.legal-bar a { color: var(--accent-secondary); font-weight: 600; text-decoration: none; }
+.legal-bar a:hover { text-decoration: underline; }
+
+.modal-legal-note {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-top: 18px;
+    padding: 14px;
+    background: rgba(255, 107, 53, 0.08);
+    border: 1px solid rgba(255, 107, 53, 0.25);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.modal-legal-note i { color: var(--accent-primary); margin-top: 2px; }
+.modal-legal-note strong { color: var(--text-primary); }
+
+/* ==================== AGE GATE (injected by js/layout.js) ==================== */
+html.sd-age-locked,
+html.sd-age-locked body { overflow: hidden; }
+
+.age-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(5, 5, 10, 0.92);
+    backdrop-filter: blur(8px);
+}
+
+.age-gate[hidden] { display: none; }
+
+.age-gate-card {
+    width: 100%;
+    max-width: 520px;
+    padding: 28px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 107, 53, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    text-align: center;
+}
+
+.age-gate-icon { font-size: 34px; color: var(--accent-primary); margin-bottom: 10px; }
+.age-gate-card h2 { font-family: 'Orbitron', sans-serif; font-size: 20px; margin-bottom: 12px; }
+.age-gate-card p { color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
+.age-gate-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0 14px; }
+.age-gate-actions button {
+    flex: 1 1 190px;
+    padding: 12px 18px;
+    border-radius: var(--border-radius);
+    border: 1px solid transparent;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.age-yes { background: var(--accent-primary); color: #0a0a0f; }
+.age-yes:hover { filter: brightness(1.1); }
+.age-no { background: transparent; color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.2); }
+.age-no:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.4); }
+.age-gate-links { font-size: 13px; }
+.age-gate-links a { color: var(--accent-secondary); text-decoration: none; }
+.age-gate-links a:hover { text-decoration: underline; }
+.age-gate-error { color: #ff6b6b !important; margin-top: 12px; font-weight: 600; }
+
+/* Price disclaimer shown next to catalogs / inventory / upgrader (real market references) */
+.price-note {
+    max-width: var(--content-max-width);
+    margin: 0 auto 18px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.price-note i { color: var(--accent-primary); margin-right: 6px; }
+
+.contents-note {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    line-height: 1.4;
+}

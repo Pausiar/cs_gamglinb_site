@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const { buildConfig, createHandler, createGame, createToken } = require('../lib/app.js');
 const { createMemoryStore, _psdb } = require('../lib/store.js');
+const data = require('../public/js/data.js');
 
 const SECRET = 'test-secret-0123456789abcdef0123456789abcdef';
 const SID = '76561198000000001';
@@ -97,7 +98,8 @@ test('state, promo, open, sell, upgrade, battle through the API', async () => {
         r = await api(srv.base, '/api/upgrade', { body: { uids: [], balanceStake: 10, targetId: 19, mode: 'over' } });
         assert.equal(r.status, 200);
         assert.equal(typeof r.json.result.win, 'boolean');
-        assert.equal(r.json.result.chance, 63.33);
+        const target = data.skins.classified.find(s => s.id === 19);
+        assert.equal(r.json.result.chance, Math.floor((10 / target.price * 0.95 * 100) * 100 + 1e-9) / 100);
 
         r = await api(srv.base, '/api/battle', { body: { caseIds: [1, 2], mode: '2v2', crazy: true } });
         assert.equal(r.status, 200);

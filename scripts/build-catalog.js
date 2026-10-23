@@ -10,19 +10,28 @@
  *   node scripts/build-catalog.js --check    like the default but write nothing (validates the spec)
  *
  * Options: --skins <file>   use a local copy of skins.json instead of downloading it
+ *          --prices <file>  use a local copy of Skinport's prices.json instead of downloading it
+ *          --no-prices      skip the market price feed and use the curated fallback prices
  *          --refresh        ignore the download cache (os.tmpdir()/skindrop-catalog)
  *          --allow-changes  allow renaming / re-rarity of ids that already exist in data.js
  *
- * Data source: https://github.com/ByMykel/CSGO-API (public/api/en/skins.json, ~5 MB, never committed).
- * Only the image URL of each skin is taken from it (Steam CDN); names, rarity tiers, prices and case
- * contents are curated below. The real "contains" lists of crates.json are NOT used on purpose: the
- * site's cases are themed and priced by us, and their odds are computed here (see "ODDS").
+ * Data source images: https://github.com/ByMykel/CSGO-API (public/api/en/skins.json, ~5 MB, never
+ * committed). Only the image URL of each skin is taken from it (Steam CDN); names, rarity tiers and
+ * case contents are curated below.
+ *
+ * Data source prices: https://api.skinport.com/v1/items?app_id=730&currency=EUR (public EUR feed,
+ * no key). Each skin is priced with its Field-Tested listing median (the most liquid wear), falling
+ * back to Minimal Wear, Well-Worn, Battle-Scarred and Factory New when that wear does not exist.
+ * The price in the spec below is only a fallback for skins that are not in the feed. The site labels
+ * these values as market reference values, never as sale prices.
+ * The real "contains" lists of crates.json are NOT used on purpose: the site's cases are themed and
+ * priced by us, and their odds are computed here (see "ODDS").
  *
  * RULES FOR EDITING THIS FILE
  *   - ids are forever: players' inventories reference them. Never renumber or reuse an id; append new
  *     skins with the next free id. Ids 1-34 keep their exact name, rarity and price.
- *   - PRICES ARE APPROXIMATE (EUR, Field-Tested-ish market ballpark, hand-set; they are a game
- *     economy, not a price feed). Keep higher rarity generally pricier.
+ *   - Prices are refreshed from the Skinport EUR feed (see above). The hand-set fallback is only used
+ *     when a skin is missing from the feed; it is not the source of truth anymore.
  *   - Case ids / names / themes of the first eight cases are referenced by history and stats: keep them.
  *
  * ODDS
@@ -39,7 +48,15 @@ const { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const DATA_JS = path.join(ROOT, 'public', 'js', 'data.js');
 const SKINS_URL = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json';
+const PRICES_URL = 'https://api.skinport.com/v1/items?app_id=730&currency=EUR';
 const CACHE_DIR = path.join(os.tmpdir(), 'skindrop-catalog');
+// Most liquid wear first: Field-Tested is the market reference used across the site.
+const PRICE_WEARS = ['Field-Tested', 'Minimal Wear', 'Well-Worn', 'Battle-Scarred', 'Factory New'];
+// Skin names whose Steam/Skinport market name is not the display name.
+const MARKET_ALIAS = {
+    'Desert Eagle | Cobalt': 'Desert Eagle | Cobalt Disruption',
+    '★ Sport Gloves | Pandora': "★ Sport Gloves | Pandora's Box"
+};
 const IMG_BASE = 'https://community.akamai.steamstatic.com/economy/image/';
 const BEGIN = '// >>> GENERATED CATALOG';
 const END = '// <<< GENERATED CATALOG';
@@ -276,6 +293,129 @@ const ADDED = [
     [213, "MP5-SD | Kitbash", 3],
     [214, "P250 | Digital Architect", 3],
     [215, "MP5-SD | Phosphor", 8],
+    // Weapon variety pass: every CS2 weapon family gets at least three skins spread across the tiers,
+    // so the Upgrader offers real weapon variety and the new cases can be themed around them. The
+    // price shown here is only the offline fallback: scripts/build-catalog.js replaces it with the
+    // Skinport EUR market reference when the feed is available.
+    // AUG
+    [216, "AUG | Snake Pit", 0.08],
+    [217, "AUG | Lapis Lazuli", 3.2],
+    [218, "AUG | Akihabara Accept", 500],
+    // SG 553
+    [219, "SG 553 | Bleached", 0.49],
+    [220, "SG 553 | Tiger Moth", 1.32],
+    [221, "SG 553 | Bulldozer", 190],
+    // Galil AR
+    [222, "Galil AR | VariCamo", 0.14],
+    [223, "Galil AR | Crimson Tsunami", 2.23],
+    [224, "Galil AR | Chatterbox", 200],
+    // FAMAS
+    [225, "FAMAS | Cyanospatter", 0.05],
+    [226, "FAMAS | Pulse", 8.45],
+    [227, "FAMAS | Roll Cage", 104],
+    // P2000
+    [228, "P2000 | Royal Baroque", 0.49],
+    [229, "P2000 | Obsidian", 5.02],
+    [230, "P2000 | Fire Elemental", 71],
+    // CZ75-Auto
+    [231, "CZ75-Auto | Copper Fiber", 1.41],
+    [232, "CZ75-Auto | Hydraulics", 2.42],
+    [233, "CZ75-Auto | Victoria", 71],
+    // R8 Revolver
+    [234, "R8 Revolver | Nitro", 0.10],
+    [235, "R8 Revolver | Blaze", 5.95],
+    [236, "R8 Revolver | Fade", 81],
+    // Dual Berettas
+    [237, "Dual Berettas | Stained", 0.11],
+    [238, "Dual Berettas | Tread", 1.16],
+    [239, "Dual Berettas | Cobra Strike", 51.33],
+    // Five-SeveN
+    [240, "Five-SeveN | Midnight Paintover", 0.06],
+    [241, "Five-SeveN | Boost Protocol", 5],
+    [242, "Five-SeveN | Hyper Beast", 280],
+    // Nova
+    [243, "Nova | Rain Station", 0.12],
+    [244, "Nova | Clear Polymer", 4.02],
+    [245, "Nova | Bloomstick", 11.38],
+    // XM1014
+    [246, "XM1014 | Blue Steel", 0.05],
+    [247, "XM1014 | Quicksilver", 0.64],
+    [248, "XM1014 | Incinegator", 5.52],
+    // MAG-7
+    [249, "MAG-7 | Storm", 0.46],
+    [250, "MAG-7 | Core Breach", 1.54],
+    [251, "MAG-7 | Cinquedea", 528],
+    // Sawed-Off
+    [252, "Sawed-Off | Lunar Wyrm", 0.29],
+    [253, "Sawed-Off | Highwayman", 1.44],
+    [254, "Sawed-Off | Wasteland Princess", 37.14],
+    // M249
+    [255, "M249 | System Lock", 0.69],
+    [256, "M249 | Aztec", 0.56],
+    [257, "M249 | Nebula Crusader", 1.37],
+    // Negev
+    [258, "Negev | Man-o'-war", 0.37],
+    [259, "Negev | Loudmouth", 0.93],
+    [260, "Negev | Power Loader", 1.44],
+    // SCAR-20
+    [261, "SCAR-20 | Blueprint", 0.46],
+    [262, "SCAR-20 | Powercore", 1.21],
+    [263, "SCAR-20 | Cyrex", 23.34],
+    // G3SG1
+    [264, "G3SG1 | Green Cell", 0.03],
+    [265, "G3SG1 | High Seas", 0.86],
+    [266, "G3SG1 | The Executioner", 9.43],
+    // SSG 08
+    [267, "SSG 08 | Hand Brake", 0.94],
+    [268, "SSG 08 | Ghost Crusader", 1.31],
+    [269, "SSG 08 | Blood in the Water", 87.51],
+    // PP-Bizon
+    [270, "PP-Bizon | Candy Apple", 0.19],
+    [271, "PP-Bizon | Osiris", 2.10],
+    [272, "PP-Bizon | Judgement of Anubis", 112.63],
+    // MAC-10
+    [273, "MAC-10 | Calf Skin", 0.11],
+    [274, "MAC-10 | Heat", 2.99],
+    [275, "MAC-10 | Stalker", 39.03],
+    // MP9
+    [276, "MP9 | Bee-Tron", 0.03],
+    [277, "MP9 | Rose Iron", 9.32],
+    [278, "MP9 | Starlight Protector", 66.71],
+    // MP7
+    [279, "MP7 | Prey", 0.21],
+    [280, "MP7 | Special Delivery", 1.20],
+    [281, "MP7 | Bloodsport", 34.87],
+    // MP5-SD
+    [282, "MP5-SD | Dirt Drop", 0.03],
+    [283, "MP5-SD | Autumn Twilly", 8.80],
+    [284, "MP5-SD | Oxide Oasis", 212.18],
+    // UMP-45
+    [285, "UMP-45 | Scorched", 0.62],
+    [286, "UMP-45 | Grand Prix", 1.26],
+    [287, "UMP-45 | Neo-Noir", 5.66],
+    // P90
+    [288, "P90 | Desert DDPAT", 0.41],
+    [289, "P90 | Attack Vector", 8],
+    [290, "P90 | Asiimov", 168.14],
+    // Tec-9
+    [291, "Tec-9 | Army Mesh", 0.03],
+    [292, "Tec-9 | Avalanche", 2.33],
+    [293, "Tec-9 | Decimator", 17.47],
+    // Zeus x27
+    [294, "Zeus x27 | Swamp DDPAT", 0.03],
+    [295, "Zeus x27 | Charged Up", 2.50],
+    [296, "Zeus x27 | Dragon Snore", 13.34],
+    // Cheap fillers for the themed cases: real cases also contain low-tier skins, and the odds/EV
+    // solver needs a cheap tier in cases whose theme is made of expensive items.
+    [297, "Glock-18 | Ocean Topo", 0.07],
+    [298, "Glock-18 | Winterized", 0.11],
+    [299, "Glock-18 | Death Rattle", 0.18],
+    [300, "Glock-18 | Off World", 0.33],
+    [301, "AK-47 | VariCamo Grey", 0.09],
+    [302, "AK-47 | Olive Polycam", 0.18],
+    [303, "AK-47 | Wintergreen", 0.88],
+    [304, "AK-47 | Steel Delta", 1.77],
+    [305, "Five-SeveN | Coolant", 0.03]
 ];
 
 // ==================== CASE SPEC ====================
@@ -295,7 +435,8 @@ const CASES = [
         'AK-47 | Safari Mesh', 'AK-47 | Predator', 'AK-47 | Baroque Purple', 'AK-47 | Black Laminate', 'AK-47 | Elite Build', 'AK-47 | Uncharted',
         'AK-47 | Blue Laminate', 'AK-47 | Rat Rod', 'AK-47 | Orbit Mk01', 'AK-47 | First Class', 'AK-47 | Ice Coaled', 'AK-47 | Point Disarray',
         'AK-47 | Redline', 'AK-47 | Jet Set', 'AK-47 | Case Hardened', 'AK-47 | Asiimov', 'AK-47 | Neon Rider', 'AK-47 | Head Shot',
-        'AK-47 | Hydroponic', 'AK-47 | Vulcan', 'AK-47 | Fire Serpent', 'AK-47 | Gold Arabesque'] },
+        'AK-47 | Hydroponic', 'AK-47 | Vulcan', 'AK-47 | Fire Serpent', 'AK-47 | Gold Arabesque', 'AK-47 | VariCamo Grey',
+        'AK-47 | Olive Polycam', 'AK-47 | Wintergreen', 'AK-47 | Steel Delta'] },
     { id: 4, name: 'Caja AWP', theme: T('sniper', 'Ojo de francotirador', '#4cc9f0', '#0b2a3a'), price: 8.00, pool: [
         'AWP | Safari Mesh', 'AWP | Sun in Leo', 'AWP | Acheron', 'AWP | Pit Viper', 'AWP | Phobos', 'AWP | Pink DDPAT', 'AWP | Mortis',
         'AWP | Fever Dream', 'AWP | Redline', 'AWP | Corticera', 'AWP | Silk Tiger', 'AWP | Neo-Noir', 'AWP | Electric Hive', 'AWP | Asiimov',
@@ -312,7 +453,7 @@ const CASES = [
         'AK-47 | Vulcan', '★ Gut Knife | Safari Mesh', '★ Gut Knife | Night', '★ Gut Knife | Bright Water', '★ Falchion Knife | Forest DDPAT',
         '★ Shadow Daggers | Night', '★ Flip Knife | Night', '★ Huntsman Knife | Night', '★ Huntsman Knife | Blue Steel', '★ Bayonet | Blue Steel',
         '★ Falchion Knife | Fade', '★ Flip Knife | Fade', '★ Karambit | Night', '★ Bayonet | Slaughter', '★ Karambit | Doppler',
-        '★ Bayonet | Tiger Tooth', '★ Flip Knife | Doppler'] },
+        '★ Bayonet | Tiger Tooth', '★ Flip Knife | Doppler', 'Glock-18 | Ocean Topo', 'AK-47 | VariCamo Grey', 'P250 | Sand Dune'] },
     { id: 7, name: 'Caja Legendaria', theme: T('legend', 'Corona de los legendarios', '#b388ff', '#2a1450'), price: 50.00, pool: [
         'AWP | Pit Viper', 'M4A4 | Magnesium', 'AWP | Redline', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'USP-S | Kill Confirmed',
         'Glock-18 | Water Elemental', 'AWP | Asiimov', 'AK-47 | Vulcan', 'M4A4 | Howl', 'AWP | Dragon Lore', 'M4A1-S | Knight',
@@ -339,13 +480,15 @@ const CASES = [
     { id: 12, name: 'Caja Glock', theme: T('glock', 'Ráfaga de polímero', '#ffb703', '#1c1c1f'), price: 3.00, pool: [
         'Glock-18 | Sand Dune', 'Glock-18 | Groundwater', 'Glock-18 | Night', 'Glock-18 | Ironwork', 'Glock-18 | Bunsen Burner',
         'Glock-18 | Steel Disruption', 'Glock-18 | Weasel', 'Glock-18 | Dragon Tattoo', 'Glock-18 | Vogue', 'Glock-18 | Water Elemental',
-        'Glock-18 | Twilight Galaxy', 'Glock-18 | Neo-Noir', 'Glock-18 | Gamma Doppler'] },
+        'Glock-18 | Twilight Galaxy', 'Glock-18 | Neo-Noir', 'Glock-18 | Gamma Doppler', 'Glock-18 | Ocean Topo', 'Glock-18 | Winterized',
+        'Glock-18 | Death Rattle', 'Glock-18 | Off World'] },
     { id: 13, name: 'Caja Pistolas', theme: T('pistols', 'Duelo al amanecer', '#2ec4b6', '#06302c'), price: 7.00, pool: [
         'USP-S | Torque', 'USP-S | Stainless', 'Desert Eagle | Night', 'Desert Eagle | Oxide Blaze', 'Five-SeveN | Capillary', 'USP-S | Cyrex',
         'USP-S | Overgrowth', 'Desert Eagle | Heirloom', 'P250 | Asiimov', 'P250 | Muertos', 'Glock-18 | Vogue', 'Glock-18 | Water Elemental',
         'Desert Eagle | Conspiracy', 'Five-SeveN | Neon Kimono', 'P250 | Nuclear Threat', 'USP-S | Caiman', 'Tec-9 | Fuel Injector',
         'Five-SeveN | Monkey Business', 'USP-S | Orion', 'Glock-18 | Twilight Galaxy', 'R8 Revolver | Llama Cannon', 'USP-S | Serum',
-        'P2000 | Imperial Dragon', 'USP-S | Kill Confirmed', 'Desert Eagle | Kumicho Dragon', 'Desert Eagle | Printstream'] },
+        'P2000 | Imperial Dragon', 'USP-S | Kill Confirmed', 'Desert Eagle | Kumicho Dragon', 'Desert Eagle | Printstream',
+        'P250 | Sand Dune', 'Five-SeveN | Coolant'] },
     { id: 14, name: 'Caja Guantes', theme: T('gloves', 'Guantes de élite', '#ff5e8a', '#3a0a1a'), price: 150.00, pool: [
         '★ Hand Wraps | Spruce DDPAT', '★ Hand Wraps | Desert Shamagh', '★ Driver Gloves | Black Tie', '★ Sport Gloves | Arid',
         '★ Specialist Gloves | Field Agent', '★ Bloodhound Gloves | Charred', '★ Moto Gloves | Eclipse', '★ Driver Gloves | Lunar Weave',
@@ -364,13 +507,45 @@ const CASES = [
         'P250 | Bone Mask', 'R8 Revolver | Bone Mask', 'Sawed-Off | Yorick', 'SSG 08 | Death\'s Head', 'Nova | Rising Skull', 'M249 | Emerald Poison Dart',
         'M4A4 | Spider Lily', 'MP9 | Ruby Poison Dart', 'M4A1-S | Night Terror', 'R8 Revolver | Skull Crusher', 'M4A4 | Evil Daimyo', 'P250 | Muertos',
         'SSG 08 | Bloodshot', 'AWP | Mortis', 'M4A1-S | Nightmare', 'P90 | Cold Blooded', 'AK-47 | Head Shot', 'Sawed-Off | The Kraken',
-        'M4A4 | Hellfire', '★ Gut Knife | Night', '★ Shadow Daggers | Night', '★ Huntsman Knife | Night', '★ Karambit | Night'] }
+        'M4A4 | Hellfire', '★ Gut Knife | Night', '★ Shadow Daggers | Night', '★ Huntsman Knife | Night', '★ Karambit | Night'] },
+    // ---- weapon-variety cases (ids 17-22) ----
+    { id: 17, name: 'Caja Selva', theme: T('jungle', 'Vegetación densa', '#5aa469', '#12301c'), price: 2.00, pool: [
+        'P250 | Boreal Forest', 'M4A1-S | Boreal Forest', 'AWP | Safari Mesh', 'G3SG1 | Safari Mesh', 'AK-47 | Safari Mesh',
+        'Galil AR | VariCamo', 'Nova | Rain Station', 'MP7 | Prey', 'UMP-45 | Scorched', 'XM1014 | Blue Steel',
+        'SCAR-20 | Blueprint', 'SSG 08 | Hand Brake', 'SSG 08 | Ghost Crusader', 'SSG 08 | Blood in the Water',
+        'AK-47 | Predator', 'AWP | Sun in Leo'] },
+    { id: 18, name: 'Caja Pesada', theme: T('heavy', 'Potencia bruta', '#c9a227', '#2c2410'), price: 1.00, pool: [
+        'M249 | System Lock', 'M249 | Aztec', 'M249 | Nebula Crusader', 'Negev | Man-o\'-war', 'Negev | Loudmouth',
+        'Negev | Power Loader', 'SCAR-20 | Blueprint', 'SCAR-20 | Powercore', 'SCAR-20 | Cyrex', 'G3SG1 | Green Cell',
+        'G3SG1 | High Seas', 'G3SG1 | The Executioner', 'XM1014 | Quicksilver', 'XM1014 | Incinegator', 'MAG-7 | Storm',
+        'MAG-7 | Core Breach', 'Sawed-Off | Lunar Wyrm', 'Sawed-Off | Highwayman', 'Sawed-Off | Wasteland Princess',
+        'Nova | Clear Polymer', 'Nova | Bloomstick'] },
+    { id: 19, name: 'Caja Subfusiles', theme: T('smg', 'Ráfaga cercana', '#38bdf8', '#0b2233'), price: 3.00, pool: [
+        'MAC-10 | Calf Skin', 'MAC-10 | Heat', 'MAC-10 | Stalker', 'MP9 | Bee-Tron', 'MP9 | Rose Iron', 'MP9 | Starlight Protector',
+        'MP7 | Prey', 'MP7 | Special Delivery', 'MP7 | Bloodsport', 'MP5-SD | Dirt Drop', 'MP5-SD | Autumn Twilly', 'MP5-SD | Oxide Oasis',
+        'UMP-45 | Scorched', 'UMP-45 | Grand Prix', 'UMP-45 | Neo-Noir', 'P90 | Desert DDPAT', 'P90 | Attack Vector', 'P90 | Asiimov',
+        'PP-Bizon | Candy Apple', 'PP-Bizon | Osiris', 'PP-Bizon | Judgement of Anubis'] },
+    { id: 20, name: 'Caja Fusiles', theme: T('rifles', 'Puntería de rifle', '#f97316', '#331605'), price: 8.00, pool: [
+        'AUG | Snake Pit', 'AUG | Lapis Lazuli', 'AUG | Akihabara Accept', 'SG 553 | Bleached', 'SG 553 | Tiger Moth', 'SG 553 | Bulldozer',
+        'Galil AR | VariCamo', 'Galil AR | Crimson Tsunami', 'Galil AR | Chatterbox', 'FAMAS | Cyanospatter', 'FAMAS | Pulse', 'FAMAS | Roll Cage',
+        'AK-47 | Safari Mesh', 'AK-47 | Predator', 'AK-47 | Redline', 'M4A1-S | Boreal Forest', 'M4A1-S | Atomic Alloy', 'M4A1-S | Nightmare'] },
+    { id: 21, name: 'Caja Retro', theme: T('retro', 'Onda ochentera', '#e879f9', '#2a0a33'), price: 5.50, pool: [
+        'CZ75-Auto | Copper Fiber', 'CZ75-Auto | Hydraulics', 'CZ75-Auto | Victoria', 'R8 Revolver | Nitro', 'R8 Revolver | Blaze', 'R8 Revolver | Fade',
+        'Dual Berettas | Stained', 'Dual Berettas | Tread', 'Dual Berettas | Cobra Strike', 'Five-SeveN | Midnight Paintover', 'Five-SeveN | Boost Protocol',
+        'Five-SeveN | Hyper Beast', 'P2000 | Royal Baroque', 'P2000 | Obsidian', 'P2000 | Fire Elemental', 'Tec-9 | Army Mesh',
+        'Tec-9 | Avalanche', 'Tec-9 | Decimator', 'Zeus x27 | Swamp DDPAT', 'Zeus x27 | Charged Up', 'Zeus x27 | Dragon Snore'] },
+    { id: 22, name: 'Caja Élite', theme: T('elite', 'Solo para coleccionistas', '#facc15', '#2a2205'), price: 160.00, pool: [
+        'AUG | Akihabara Accept', 'SG 553 | Bulldozer', 'Galil AR | Chatterbox', 'FAMAS | Roll Cage', 'P2000 | Fire Elemental',
+        'CZ75-Auto | Victoria', 'R8 Revolver | Fade', 'Dual Berettas | Cobra Strike', 'Five-SeveN | Hyper Beast', 'MAG-7 | Cinquedea',
+        'Sawed-Off | Wasteland Princess', 'MP9 | Starlight Protector', 'MP7 | Bloodsport', 'MP5-SD | Oxide Oasis', 'P90 | Asiimov',
+        'Tec-9 | Decimator', 'AK-47 | Vulcan', 'AWP | Asiimov', 'M4A1-S | Printstream', 'AWP | Neo-Noir',
+        '★ Flip Knife | Night', '★ Karambit | Doppler', '★ Sport Gloves | Pandora'] }
 ];
 
 // ==================== CATALOG LOADING ====================
-function download(url, file) {
+function download(url, file, headers) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    return fetch(url, { signal: AbortSignal.timeout(120000) })
+    return fetch(url, { signal: AbortSignal.timeout(120000), headers: headers || {} })
         .then(res => {
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.arrayBuffer();
@@ -379,7 +554,7 @@ function download(url, file) {
         .catch(err => {
             // Node's fetch ignores HTTPS_PROXY: fall back to curl, which honours it
             console.error('fetch failed (' + err.message + '), trying curl...');
-            execFileSync('curl', ['-fsSL', '--max-time', '180', '-o', file, url], { stdio: 'inherit' });
+            execFileSync('curl', ['-fsSL', '--compressed', '--max-time', '180', '-o', file, url], { stdio: 'inherit' });
         });
 }
 
@@ -403,6 +578,65 @@ async function loadSkinsJson(args) {
     return byName;
 }
 
+// ==================== MARKET PRICES ====================
+function roundPrice(n) { return Math.max(0.01, Math.round(n * 100) / 100); }
+function median(values) {
+    const a = values.slice().sort((x, y) => x - y);
+    const m = a.length >> 1;
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+}
+
+function buildPriceIndex(list) {
+    if (!Array.isArray(list) || !list.length) throw new Error('prices.json: unexpected format');
+    // The same market_hash_name appears once per Doppler phase: keep the median so no phase dominates.
+    const grouped = new Map();
+    list.forEach(row => {
+        if (!row || typeof row.market_hash_name !== 'string' || !(row.median_price > 0)) return;
+        if (!grouped.has(row.market_hash_name)) grouped.set(row.market_hash_name, []);
+        grouped.get(row.market_hash_name).push(Number(row.median_price));
+    });
+    const prices = new Map();
+    grouped.forEach((values, name) => prices.set(name, median(values)));
+    return prices;
+}
+
+async function loadPricesJson(args) {
+    if (args.noPrices) return null;
+    let file = args.prices;
+    if (!file) {
+        file = path.join(CACHE_DIR, 'prices.json');
+        if (args.refresh || !fs.existsSync(file)) {
+            console.error('Downloading ' + PRICES_URL);
+            try {
+                await download(PRICES_URL, file, {
+                    'Accept-Encoding': 'br, gzip, deflate',
+                    'User-Agent': 'SkinDrop-catalog-builder'
+                });
+            } catch (err) {
+                console.warn('warn: no market prices (' + err.message + '); using curated fallback prices');
+                return null;
+            }
+        }
+    }
+    try {
+        return buildPriceIndex(JSON.parse(fs.readFileSync(file, 'utf8')));
+    } catch (err) {
+        console.warn('warn: could not read prices (' + err.message + '); using curated fallback prices');
+        return null;
+    }
+}
+
+// Field-Tested market median, or the closest wear that exists for that skin.
+function marketPrice(prices, name) {
+    const key = MARKET_ALIAS[name] || name;
+    for (const wear of PRICE_WEARS) {
+        const p = prices.get(key + ' (' + wear + ')');
+        if (p > 0) return roundPrice(p);
+    }
+    const exact = prices.get(key);
+    return exact > 0 ? roundPrice(exact) : null;
+}
+
 // ==================== SKIN TABLE ====================
 function imageToken(url) {
     if (typeof url !== 'string' || !/^https:\/\/community\.(akamai|cloudflare)\.steamstatic\.com\/economy\/image\/[A-Za-z0-9_-]+$/.test(url)) {
@@ -411,11 +645,13 @@ function imageToken(url) {
     return url.replace(/^https:\/\/community\.(akamai|cloudflare)\.steamstatic\.com\/economy\/image\//, '');
 }
 
-function buildSkinTable(catalog) {
+function buildSkinTable(catalog, prices) {
     const errors = [];
     const rows = [];
     const ids = new Set(), names = new Set();
-    function add(id, rarity, name, price, catalogName) {
+    const missingPrices = [];
+    let realPrices = 0;
+    function add(id, rarity, name, fallbackPrice, catalogName) {
         if (ids.has(id)) errors.push('duplicate id ' + id);
         if (names.has(name)) errors.push('duplicate name ' + name);
         ids.add(id); names.add(name);
@@ -425,10 +661,14 @@ function buildSkinTable(catalog) {
         const real = name.startsWith('★') ? 'gold' : CATALOG_RARITY[entry.rarity && entry.rarity.name];
         if (!rarity) rarity = real;
         if (!rarity) { errors.push('unknown rarity for ' + name); return; }
+        const market = prices ? marketPrice(prices, name) : null;
+        const price = market || fallbackPrice;
+        if (market) realPrices++;
+        else if (prices) missingPrices.push(name);
         if (!(price > 0)) errors.push('bad price for ' + name);
         let token;
         try { token = imageToken(entry.image); } catch (e) { errors.push(name + ': ' + e.message); return; }
-        rows.push({ id, rarity, name, price, token, real });
+        rows.push({ id, rarity, name, price, token, real, marketPrice: !!market });
     }
     ORIGINAL.forEach(r => add(r[0], r[1], r[2], r[3], r[4]));
     ADDED.forEach(r => add(r[0], null, r[1], r[2]));
@@ -438,7 +678,7 @@ function buildSkinTable(catalog) {
         seenImg.set(r.token, r.name);
     });
     rows.sort((a, b) => a.id - b.id);
-    return { rows, errors };
+    return { rows, errors, realPrices, missingPrices };
 }
 
 // ==================== ODDS ====================
@@ -555,10 +795,20 @@ function buildCases(rows) {
 const q = s => JSON.stringify(s);
 const num = n => String(Number(n));
 
-function generate(rows, cases) {
+function generate(rows, cases, market) {
     const L = [];
     L.push(BEGIN + ' (scripts/build-catalog.js) - do not edit by hand, edit the spec there and re-run it');
-    L.push('// Prices are approximate EUR (Field-Tested-ish market ballpark), not a live price feed.');
+    L.push('// Prices are EUR market reference values (median of the Field-Tested listing, or the closest wear');
+    L.push('// available) from the public Skinport feed, refreshed by the build script. They are informative');
+    L.push('// only: Skins are virtual, cannot be withdrawn and these are not sale prices.');
+    L.push('const priceSource = ' + JSON.stringify({
+        provider: market.provider,
+        currency: 'EUR',
+        basis: market.basis,
+        updated: market.updated,
+        matched: market.matched,
+        total: market.total
+    }) + ';');
     L.push('// Images: Steam CDN URLs taken from the public CS2 catalog (ByMykel/CSGO-API); a failing image falls');
     L.push('// back to SKIN_PLACEHOLDER (see the error handler at the end of this file).');
     L.push('const STEAM_IMG = ' + q(IMG_BASE) + ';');
@@ -658,14 +908,16 @@ function printReport(data) {
 // ==================== MAIN ====================
 async function main() {
     const argv = process.argv.slice(2);
-    const args = { report: false, check: false, refresh: false, allowChanges: false, skins: null };
+    const args = { report: false, check: false, refresh: false, allowChanges: false, skins: null, prices: null, noPrices: false };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--report') args.report = true;
         else if (a === '--check') args.check = true;
         else if (a === '--refresh') args.refresh = true;
         else if (a === '--allow-changes') args.allowChanges = true;
+        else if (a === '--no-prices') args.noPrices = true;
         else if (a === '--skins') args.skins = path.resolve(argv[++i] || '');
+        else if (a === '--prices') args.prices = path.resolve(argv[++i] || '');
         else { console.error('unknown option ' + a); process.exit(2); }
     }
 
@@ -674,7 +926,9 @@ async function main() {
     }
 
     const catalog = await loadSkinsJson(args);
-    const table = buildSkinTable(catalog);
+    const prices = await loadPricesJson(args);
+    if (prices) console.log('Market prices loaded: ' + prices.size + ' market names (Skinport, EUR)');
+    const table = buildSkinTable(catalog, prices);
     const built = buildCases(table.rows);
     const errors = table.errors.concat(built.errors);
 
@@ -699,6 +953,11 @@ async function main() {
         process.exit(1);
     }
 
+    if (table.missingPrices.length) {
+        console.warn('warn: no market price for ' + table.missingPrices.length + ' skin(s), using the curated fallback: ' +
+            table.missingPrices.join(', '));
+    }
+
     // soft checks
     const tierRange = {};
     table.rows.forEach(r => {
@@ -710,7 +969,14 @@ async function main() {
     built.cases.forEach(c => c.items.forEach(p => { if (p[1] < 0.0005) console.warn('warn: ' + c.name + ': item #' + p[0] + ' has odds ' + p[1] + '%'); }));
     console.log('Price range per tier: ' + RARITIES.map(r => r + ' ' + tierRange[r].min + '-' + tierRange[r].max).join(' | '));
 
-    const out = splice(fs.readFileSync(DATA_JS, 'utf8'), generate(table.rows, built.cases));
+    const market = {
+        provider: prices ? 'Skinport' : 'Curated fallback',
+        basis: prices ? 'Mediana de la variante Field-Tested (o la más cercana)' : 'Precios orientativos editados a mano',
+        updated: new Date().toISOString().slice(0, 10),
+        matched: table.realPrices,
+        total: table.rows.length
+    };
+    const out = splice(fs.readFileSync(DATA_JS, 'utf8'), generate(table.rows, built.cases, market));
     if (args.check) { console.log('OK (--check: nothing written)'); return; }
     fs.writeFileSync(DATA_JS, out);
     console.log('Wrote ' + path.relative(ROOT, DATA_JS) + ': ' + table.rows.length + ' skins, ' + built.cases.length + ' cases');

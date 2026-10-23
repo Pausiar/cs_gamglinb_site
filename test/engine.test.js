@@ -91,46 +91,53 @@ test('sellItems credits prices and removes items; rejects unknown uids', () => {
 });
 
 test('inventory prices come from the catalog, not from stored data', () => {
+    const price = engine.skinInfo(27).price;
     const s = withBalance(0, { inventory: [{ uid: 'abc', id: 27, price: 999999, name: 'hack' }] });
     const out = engine.sellItems(s, { uids: ['abc'] }, seeded(1));
-    assert.equal(out.result.amount, 3500);
-    assert.equal(out.state.balance, 3500);
+    assert.equal(out.result.amount, price);
+    assert.equal(out.state.balance, price);
 });
 
 test('upgrade: chance formula, win and lose with balance stake', () => {
-    // AWP | Redline (id 19) costs 15; stake 5 -> 5/15*0.95 = 31.66%
+    // AWP | Redline (id 19) is priced by the catalog; stake 5 -> chance = 5/price*0.95
+    const targetPrice = engine.skinInfo(19).price;
+    const chance = Math.floor((5 / targetPrice * 0.95 * 100) * 100 + 1e-9) / 100;
+    assert.ok(chance > 1 && chance < 75, 'chance ' + chance);
     const s = withBalance(10);
-    const win = engine.upgrade(s, { uids: [], balanceStake: 5, targetId: 19, mode: 'under' }, seq([0.1]), 5);
-    assert.equal(win.result.chance, 31.66);
-    assert.equal(win.result.roll, 10);
+    const win = engine.upgrade(s, { uids: [], balanceStake: 5, targetId: 19, mode: 'under' }, seq([chance / 200]), 5);
+    assert.equal(win.result.chance, chance);
     assert.equal(win.result.win, true);
     assert.equal(win.state.balance, 5);
     assert.equal(win.state.inventory.length, 1);
     assert.equal(win.state.inventory[0].id, 19);
     assert.equal(win.state.stats.totalSpent, 5);
-    assert.equal(win.state.stats.totalWon, 15);
+    assert.equal(win.state.stats.totalWon, targetPrice);
     assert.equal(win.state.history[0].caseName, 'Upgrader');
 
-    const lose = engine.upgrade(s, { balanceStake: 5, targetId: 19, mode: 'under' }, seq([0.5]));
+    const lose = engine.upgrade(s, { balanceStake: 5, targetId: 19, mode: 'under' }, seq([(chance + (100 - chance) / 2) / 100]));
     assert.equal(lose.result.win, false);
-    assert.equal(lose.result.roll, 50);
     assert.equal(lose.state.inventory.length, 0);
     assert.equal(lose.state.balance, 5);
 
-    // over: win iff roll >= 100 - chance (68.34)
-    const over = engine.upgrade(s, { balanceStake: 5, targetId: 19, mode: 'over' }, seq([0.6834]));
+    // over: win iff roll >= 100 - chance
+    const over = engine.upgrade(s, { balanceStake: 5, targetId: 19, mode: 'over' }, seq([(100 - chance / 2) / 100]));
     assert.equal(over.result.win, true);
-    const over2 = engine.upgrade(s, { balanceStake: 5, targetId: 19, mode: 'over' }, seq([0.6833]));
+    const over2 = engine.upgrade(s, { balanceStake: 5, targetId: 19, mode: 'over' }, seq([(100 - chance - 0.01) / 100]));
     assert.equal(over2.result.win, false);
 });
 
 test('upgrade with items: stakes items, caps chance at 75%', () => {
-    const s = withBalance(0, { inventory: [{ uid: 'u1', id: 21 }, { uid: 'u2', id: 19 }] }); // 18 + 15 = 33
-    const out = engine.upgrade(s, { uids: ['u1', 'u2'], balanceStake: 0, targetId: 25, mode: 'under' }, seq([0.7499])); // 95
-    assert.equal(out.result.stake, 33);
-    assert.equal(out.result.chance, 33 / 95 * 0.95 * 100 >= 75 ? 75 : Math.floor(33 / 95 * 95 * 100) / 100);
+    const value = engine.skinInfo(21).price + engine.skinInfo(19).price;
+    const targetPrice = engine.skinInfo(25).price;
+    const expected = Math.floor(Math.min(value / targetPrice * 0.95 * 100, 75) * 100 + 1e-9) / 100;
+    const s = withBalance(0, { inventory: [{ uid: 'u1', id: 21 }, { uid: 'u2', id: 19 }] });
+    const out = engine.upgrade(s, { uids: ['u1', 'u2'], balanceStake: 0, targetId: 25, mode: 'under' }, seq([0.0001]));
+    assert.equal(out.result.stake, engine.round2(value));
+    assert.equal(out.result.chance, expected);
     assert.equal(out.state.inventory.filter(i => i.uid === 'u1' || i.uid === 'u2').length, 0);
-    const capped = engine.upgrade(withBalance(100), { balanceStake: 79, targetId: 24 }, seq([0.7499])); // 79/80
+    // staking ~90% of the target price caps the chance at 75%
+    const capStake = engine.round2(engine.skinInfo(24).price * 0.9);
+    const capped = engine.upgrade(withBalance(capStake + 10), { balanceStake: capStake, targetId: 24 }, seq([0.7499]));
     assert.equal(capped.result.chance, 75);
     assert.equal(capped.result.win, true);
 });

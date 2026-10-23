@@ -16,7 +16,8 @@ const SECRET = 'test-secret-0123456789abcdef0123456789abcdef';
 // Pages the site must have (more *.html files are checked too, automatically)
 const REQUIRED_PAGES = [
     'index', 'cajas', 'upgrader', 'batallas', 'inventario', 'estadisticas',
-    'recompensas', 'ranking', 'provably-fair', 'terminos', 'privacidad', 'contacto'
+    'recompensas', 'ranking', 'provably-fair', 'terminos', 'privacidad', 'cookies',
+    'aviso-legal', 'juego-responsable', 'contacto'
 ];
 const PLACEHOLDER_ROOTS = { recompensas: 'rewardsRoot', ranking: 'leaderboardRoot', 'provably-fair': 'fairRoot' };
 
@@ -134,12 +135,31 @@ test('footer pages state the truth: no real money, virtual items, +18, Steam dat
     assert.match(terms, /dinero real/i);
     assert.match(terms, /18 años/);
     assert.match(terms, /no se pueden retirar|no es posible[^.]*retirar/i);
+    assert.match(terms, /no es un casino ni un sitio de apuestas/i);
+    assert.match(terms, /valor de referencia/i);
     const privacy = read('privacidad');
     assert.match(privacy, /SteamID/);
     assert.match(privacy, /saldo virtual/i);
     assert.match(privacy, /contraseña/i);
+    assert.match(privacy, /RGPD/);
+    assert.match(privacy, /aepd\.es/);
     assert.match(read('contacto'), /mailto:contacto@skindrop\.example/);
     assert.ok(!/<form[\s>]/i.test(read('contacto')), 'contacto: sin formularios');
+    assert.match(read('aviso-legal'), /LSSI/);
+    assert.match(read('aviso-legal'), /NIF/);
+    assert.match(read('cookies'), /sd_session/);
+    assert.match(read('cookies'), /no usa cookies publicitarias/i);
+    assert.match(read('juego-responsable'), /FEJAR/);
+});
+
+test('shared layout carries the legal notice and 18+ gate, and offers no payment methods', () => {
+    const layout = fs.readFileSync(path.join(PUBLIC, 'js', 'layout.js'), 'utf8');
+    assert.match(layout, /Simulación/);
+    assert.match(layout, /sd_age_ok/);
+    assert.match(layout, /Solo para mayores de 18 años/);
+    assert.match(layout, /Sin dinero real/);
+    assert.ok(!/Métodos de Pago/i.test(layout), 'no debe sugerir compras con dinero real');
+    assert.ok(!/payment-methods/.test(layout), 'no debe quedar el bloque de pagos');
 });
 
 test('every nav / footer link of layout.js points to an existing page', () => {

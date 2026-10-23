@@ -632,6 +632,12 @@ function openCaseModal(caseId) {
 
 function showCaseContents(caseData) {
     const chances = getItemChances(caseData.items);
+    const note = byId('contentsNote');
+    if (note) {
+        const updated = typeof priceSource !== 'undefined' && priceSource.updated ? priceSource.updated : '';
+        note.textContent = 'Precios de referencia del mercado (Skinport, EUR' + (updated ? ', ' + updated : '') +
+            '). No son precios de venta: las skins son virtuales y no se pueden retirar.';
+    }
     contentsGrid.innerHTML = caseData.items.map((item, i) => {
         const rarity = getRarity(item);
         const chance = formatChance(chances[i]);

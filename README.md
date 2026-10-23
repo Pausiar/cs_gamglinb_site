@@ -1,6 +1,6 @@
 # SkinDrop
 
-Web de apertura de cajas de CS2 (simulación, sin dinero real): cajas, upgrader, batallas contra bots e inicio de sesión con Steam.
+Web de apertura de cajas de CS2 (simulación, sin dinero real): 22 cajas temáticas, upgrader con todo el catálogo, batallas contra bots y inicio de sesión con Steam. Los precios del catálogo son valores de referencia del mercado real (Skinport, EUR), no precios de venta.
 
 - **Invitados**: juegan en local; el saldo y el inventario se guardan en `localStorage` del navegador.
 - **Usuarios de Steam**: la economía la decide el **servidor**. Cada acción (abrir caja, vender, upgrade, batalla, código promocional) se ejecuta en el servidor con un generador aleatorio criptográfico y se guarda en **PS_Database**. El navegador solo anima el resultado.
@@ -12,11 +12,13 @@ public/            Sitio estático (lo único que se publica como estático)
   *.html           Una página por sección: index (Inicio), cajas, upgrader, batallas, inventario,
                    estadisticas, recompensas*, ranking*, provably-fair* (*marcadores de posición
                    con su raíz vacía: #rewardsRoot, #leaderboardRoot, #fairRoot), terminos,
-                   privacidad, contacto. URLs limpias: /cajas, /ranking...
+                   privacidad, cookies, aviso-legal, juego-responsable, contacto.
+                   URLs limpias: /cajas, /ranking...
   favicon.svg
   css/             styles.css (base: cabecera, modal, pie, toasts), home.css, cases.css, stats.css,
                    inventory.css, upgrader.css, battles.css, auth.css, pages.css (textos y "Próximamente")
-  js/layout.js     Cabecera, modal de saldo y pie compartidos (se inyectan en #siteHeader / #siteFooter)
+  js/layout.js     Cabecera, aviso legal, control de edad 18+, modal de saldo y pie compartidos
+                   (se inyectan en #siteHeader / #siteFooter)
   js/sfx.js        Sonidos generados con Web Audio + botón de silencio
   js/app.js        Estado, acciones (window.SkinDrop) y UI de cajas / inventario / estadísticas
   js/data.js       Catálogo de skins y cajas (navegador y Node)
@@ -45,6 +47,34 @@ test/              Tests (node:test, sin dependencias)
 - **Rutas**: `lib/routes/<modulo>.js` exporta `register(router, ctx)` y se añade al array de `lib/routes/index.js`. `router.get/post(path, handler, opts)` y `router.action(path, accion)` aplican la misma seguridad que la API del juego (sesión, mismo origen, JSON, ≤ 10 KB). La cabecera de `lib/routes/index.js` documenta `router`, `ctx` y los handlers.
 - **Hooks**: `lib/hooks/<modulo>.js` exporta `install(hooks, ctx)` (array en `lib/hooks/index.js`). `hooks.makeRng({ steamId, profile, action })` devuelve `{ rng, meta }` y lo usa toda acción del juego; si `meta` no es `null` la respuesta incluye `fair: meta`. `hooks.afterAction(evento)` / `hooks.onAfterAction(fn)` se ejecutan tras guardar la acción (sus errores se registran y nunca fallan la petición). Ver `lib/hooks/defaults.js`.
 
+## Catálogo y precios
+
+`public/js/data.js` está generado por `scripts/build-catalog.js`:
+
+```bash
+node scripts/build-catalog.js            # descarga imágenes (ByMykel/CSGO-API) y precios (Skinport EUR)
+node scripts/build-catalog.js --report   # tabla de valor esperado y aviso si una caja se sale del margen
+node scripts/build-catalog.js --check    # valida sin escribir
+```
+
+- **Precios reales:** se toma la mediana en EUR de la variante *Field-Tested* de cada skin en el feed público de
+  [Skinport](https://skinport.com) (o la variante más cercana si esa no existe). El resultado queda en
+  `priceSource` con la fecha de actualización y se muestra en la web como **valor de referencia, nunca como precio de venta**.
+- Sin red o sin querer refrescar precios: `--no-prices` usa los precios de reserva escritos en el spec; `--prices <archivo>`
+  reutiliza una descarga local. El resto de opciones (`--skins`, `--refresh`, `--allow-changes`) están en la cabecera del script.
+- Las cajas nuevas (ids 17-22) y las skins nuevas se añaden en `CASES` y `ADDED`; las odds se recalculan solas para que el
+  valor esperado de cada apertura siga siendo el 88 % del precio de la caja (margen de la casa del 12 %).
+
+## Legalidad y datos del titular
+
+El sitio es una **simulación sin dinero real**, no un casino ni un sitio de apuestas. Antes de publicar, el titular debe:
+
+1. Completar los datos de identificación (nombre/razón social, NIF, domicilio y correo) en `public/aviso-legal.html`,
+   `public/privacidad.html` y `public/contacto.html`. Están marcados como `[PENDIENTE]`/`[NIF]` y el correo de ejemplo es
+   `contacto@skindrop.example`; sin datos reales esas páginas no cumplen la LSSI ni el RGPD.
+2. Revisar las cookies listadas en `public/cookies.html` si añade analítica, publicidad o pagos.
+3. Mantener el aviso visible de "sin dinero real / +18 / skins no retirables" y no introducir compras, depósitos ni retiradas.
+
 ## Ejecutar en local
 
 Requiere Node 22 (sin dependencias, no hace falta `npm install`).
@@ -52,7 +82,8 @@ Requiere Node 22 (sin dependencias, no hace falta `npm install`).
 ```bash
 cp .env.example .env     # rellena SESSION_SECRET (y opcionalmente STEAM_API_KEY / PSDB_*)
 npm start                # http://localhost:3000
-npm test                 # tests del motor y de la API
+npm test                 # tests del motor, catálogo, legal y API
+node scripts/build-catalog.js --no-prices   # regenera el catálogo sin red (precios de reserva)
 ```
 
 Sin `PSDB_URL` + `PSDB_API_KEY` el servidor usa un almacén **en memoria** (los perfiles de Steam se pierden al reiniciar). Abrir `public/index.html` directamente (`file://`) también funciona (los enlaces apuntan a los `.html`), pero solo en modo invitado.

@@ -414,6 +414,133 @@
         };
     };
 
+    T.jungle = function (k) {
+        var leaf = function (x, y, s) {
+            return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')" fill="#2f7d3f" stroke="#0b2411" stroke-width="1.2">' +
+                '<path d="M0 0Q14 -12 30 0Q14 12 0 0Z"/><path d="M0 0H28" stroke="#9be7a3" stroke-width="1" opacity=".6"/></g>';
+        };
+        return {
+            defs: lg(k + 'g', ['#0f2d18', '#05130a']) + rg(k + 'r', '#7ee787', '#2f7d3f', .5) +
+                lg(k + 'b', ['#2f6b3a', '#183a20']) + lg(k + 'l', ['#3c7f48', '#1d4a28']),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<circle cx="100" cy="80" r="100" fill="url(#' + k + 'r)"/>' +
+                '<g stroke="#7ee787" stroke-opacity=".18" stroke-width="1"><path d="M100 0V60M60 10L100 60M140 10L100 60"/></g>' +
+                leaf(6, 26, 1.3) + leaf(148, 18, 1.1) + leaf(22, 148, 1.0) + leaf(156, 142, 1.2) +
+                '<g fill="#d9ffe0" opacity=".6"><circle cx="42" cy="78" r="1.3"/><circle cx="168" cy="96" r="1.1"/><circle cx="28" cy="110" r="1"/></g>' +
+                '<path d="M-4 178Q40 160 90 176T204 168V204H-4Z" fill="#0a1f0f"/>',
+            back: leaf(10, 120, .9) + leaf(170, 112, .8) +
+                '<path d="M14 178Q8 140 26 116Q30 146 22 178ZM186 178Q192 138 174 112Q170 146 180 178Z" fill="#12351b"/>',
+            c: { edge: '#0b2411', trim: '#9be7a3', top: '#4e9a5d', plate: 'rgba(5,20,9,.55)' },
+            lid: '<path d="M48 82H152" stroke="#b8f3c2" stroke-width="2" opacity=".8"/><path d="M70 76Q82 66 94 76Q106 66 118 76Q126 70 132 76" fill="none" stroke="#9be7a3" stroke-width="2.2" stroke-linecap="round"/>',
+            emb: '<circle cx="100" cy="136" r="24" fill="#0f2d18" stroke="#9be7a3" stroke-width="2"/>' +
+                '<path d="M100 154Q84 142 84 128Q84 118 100 112Q116 118 116 128Q116 142 100 154Z" fill="#7ee787" opacity=".9"/>' +
+                '<path d="M100 118V150M92 126Q100 132 108 126" stroke="#0f2d18" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        };
+    };
+
+    T.heavy = function (k) {
+        var bolt = function (x, y) {
+            return '<g transform="translate(' + x + ' ' + y + ')" fill="#3a352a" stroke="#111" stroke-width="1"><circle cx="0" cy="0" r="5"/><path d="M-2 -2H2V2H-2Z" fill="#c9a227"/></g>';
+        };
+        return {
+            defs: lg(k + 'g', ['#2c2410', '#0d0b06']) + rg(k + 'r', '#f2c94c', '#c9a227', .45) +
+                lg(k + 'b', ['#5a5138', '#2a2518']) + lg(k + 'l', ['#6d6244', '#342e1d']) +
+                '<pattern id="' + k + 'h" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="12" height="24" fill="#c9a227" opacity=".55"/></pattern>',
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<circle cx="100" cy="92" r="100" fill="url(#' + k + 'r)"/>' +
+                '<path d="M0 24H200V44H0Z" fill="url(#' + k + 'h)"/> <path d="M0 156H200V176H0Z" fill="url(#' + k + 'h)"/>' +
+                '<g stroke="#c9a227" stroke-opacity=".35" stroke-width="2"><path d="M18 54V146M182 54V146"/></g>',
+            back: bolt(26, 68) + bolt(174, 68) + bolt(26, 140) + bolt(174, 140) +
+                '<path d="M12 100H26M174 100H188" stroke="#c9a227" stroke-width="3" stroke-linecap="round" opacity=".6"/>',
+            c: { edge: '#111', trim: '#c9a227', top: '#6d6244', plate: 'rgba(10,8,3,.6)' },
+            lid: '<path d="M44 82H156" stroke="#f2c94c" stroke-width="4" stroke-dasharray="14 6" opacity=".85"/>',
+            emb: '<circle cx="100" cy="136" r="26" fill="#1a160c" stroke="#c9a227" stroke-width="2.5"/>' +
+                '<path d="M84 148V128L92 134L100 120L108 134L116 128V148Z" fill="#f2c94c"/>' +
+                '<path d="M84 152H116" stroke="#f2c94c" stroke-width="2"/>'
+        };
+    };
+
+    T.smg = function (k) {
+        var speed = function (y, x) {
+            return '<path d="M' + x + ' ' + y + 'H' + (x + 46) + '" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity=".35"/>';
+        };
+        return {
+            defs: lg(k + 'g', ['#0b2233', '#030b12']) + rg(k + 'r', '#38bdf8', '#0ea5e9', .5) +
+                lg(k + 'b', ['#1e4d68', '#0b2233']) + lg(k + 'l', ['#26617f', '#0e2c3d']),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<circle cx="100" cy="96" r="100" fill="url(#' + k + 'r)"/>' +
+                '<g fill="none" stroke="#7dd3fc" stroke-opacity=".2"><circle cx="100" cy="96" r="70"/><circle cx="100" cy="96" r="48"/><circle cx="100" cy="96" r="26"/></g>' +
+                speed(34, 8) + speed(50, 30) + speed(160, 12) + speed(176, 40) +
+                '<path d="M172 20L150 42M172 20L166 50M172 20L142 32" stroke="#7dd3fc" stroke-width="2" opacity=".5"/>',
+            back: '<g fill="#7dd3fc" opacity=".35"><rect x="8" y="112" width="6" height="46" rx="2"/><rect x="186" y="120" width="6" height="38" rx="2"/></g>',
+            c: { edge: '#04121c', trim: '#38bdf8', top: '#2a6d8f', plate: 'rgba(2,10,16,.6)' },
+            lid: '<path d="M46 82H154" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round"/><path d="M60 76H140" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 4" opacity=".8"/>',
+            emb: '<path d="M72 124H112V132H72ZM112 126H128V130H112Z" fill="#bae6fd" stroke="#04121c" stroke-width="1.2"/>' +
+                '<path d="M80 132H104L100 154H84Z" fill="#38bdf8" stroke="#04121c" stroke-width="1.2"/>' +
+                '<circle cx="128" cy="146" r="14" fill="none" stroke="#7dd3fc" stroke-width="2" opacity=".8"/>'
+        };
+    };
+
+    T.rifles = function (k) {
+        return {
+            defs: lg(k + 'g', ['#331605', '#120701']) + rg(k + 'r', '#fb923c', '#f97316', .5) +
+                lg(k + 'b', ['#7a3a14', '#3a1a08']) + lg(k + 'l', ['#8f4720', '#4a210c']),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<circle cx="100" cy="96" r="100" fill="url(#' + k + 'r)"/>' +
+                '<g fill="none" stroke="#fdba74" stroke-opacity=".28" stroke-width="1.5"><circle cx="100" cy="96" r="58"/><path d="M100 30V162M34 96H166"/></g>' +
+                '<path d="M-4 172H204" stroke="#fdba74" stroke-opacity=".25" stroke-width="2"/>',
+            back: '<g fill="#f97316" opacity=".3"><rect x="8" y="120" width="4" height="40"/><rect x="188" y="110" width="4" height="50"/></g>',
+            c: { edge: '#1a0a02', trim: '#fdba74', top: '#8f4720', plate: 'rgba(18,7,1,.6)' },
+            lid: '<path d="M44 82H156" stroke="#fdba74" stroke-width="2.5" opacity=".85"/><path d="M52 76H148" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="10 5"/>',
+            emb: '<circle cx="100" cy="136" r="25" fill="none" stroke="#fdba74" stroke-width="2.5"/>' +
+                '<path d="M100 118V154M82 136H118" stroke="#fb923c" stroke-width="2"/>' +
+                '<circle cx="100" cy="136" r="5" fill="#fdba74"/>'
+        };
+    };
+
+    T.retro = function (k) {
+        var grid = '';
+        for (var i = -6; i <= 6; i++) grid += '<path d="M' + (100 + i * 8) + ' 150L' + (100 + i * 34) + ' 200"/>';
+        [160, 172, 186].forEach(function (y) { grid += '<path d="M0 ' + y + 'H200"/>'; });
+        return {
+            defs: lg(k + 'g', ['#2a0a33', '#0d0212']) + rg(k + 'r', '#e879f9', '#a21caf', .5) +
+                lg(k + 'b', ['#6b216f', '#2a0a33']) + lg(k + 'l', ['#7d2981', '#350d3d']) +
+                lg(k + 's', ['#fde047', '#e879f9', '#7c3aed'], 0, 1),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<circle cx="100" cy="82" r="38" fill="url(#' + k + 's)" opacity=".75"/>' +
+                '<g stroke="#fde047" stroke-opacity=".5"><path d="M60 76H140M60 84H140M60 92H140"/></g>' +
+                '<circle cx="100" cy="96" r="100" fill="url(#' + k + 'r)" opacity=".5"/>' +
+                '<g stroke="#e879f9" stroke-opacity=".5" fill="none" stroke-width="1">' + grid + '</g>',
+            back: '<path d="M168 20L186 38L168 56L150 38Z" fill="#e879f9" opacity=".25"/>' + sparkle(36, 28, 6, '#fde047', .9) + sparkle(160, 80, 4, '#fff', .8),
+            c: { edge: '#12021a', trim: '#e879f9', top: '#6b216f', plate: 'rgba(10,1,14,.65)' },
+            lid: '<path d="M46 82H154" stroke="#fde047" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+                '<rect x="70" y="74" width="60" height="16" rx="2" fill="#2a0a33" stroke="#e879f9" stroke-width="1.5"/>' +
+                '<g fill="#fde047"><circle cx="80" cy="82" r="2.5"/><circle cx="120" cy="82" r="2.5"/></g>',
+            emb: '<rect x="74" y="118" width="52" height="36" rx="3" fill="#12021a" stroke="#e879f9" stroke-width="2"/>' +
+                '<circle cx="88" cy="130" r="5" fill="#fde047"/><circle cx="112" cy="130" r="5" fill="#fde047"/>' +
+                '<path d="M80 144H120" stroke="#e879f9" stroke-width="2" stroke-dasharray="4 3"/>'
+        };
+    };
+
+    T.elite = function (k) {
+        return {
+            defs: lg(k + 'g', ['#2a2205', '#050401']) + rg(k + 'r', '#facc15', '#a16207', .45) +
+                lg(k + 'b', ['#3a3214', '#141005']) + lg(k + 'l', ['#4c4219', '#1d1808']) +
+                lg(k + 'd', ['#fff7cc', '#facc15', '#a16207'], 1, 1),
+            bg: '<rect width="200" height="200" rx="18" fill="url(#' + k + 'g)"/>' +
+                '<circle cx="100" cy="92" r="100" fill="url(#' + k + 'r)"/>' +
+                '<path d="M0 100L100 0L200 100L100 200Z" fill="none" stroke="#facc15" stroke-opacity=".15" stroke-width="2"/>' +
+                sparkle(26, 34, 7, '#facc15', .9) + sparkle(172, 44, 5, '#fff7cc', .9) + sparkle(158, 140, 4, '#facc15', .8),
+            back: '<path d="M8 178H192" stroke="#facc15" stroke-opacity=".45" stroke-width="1.5"/>',
+            c: { edge: '#a16207', trim: '#facc15', top: '#4c4219', plate: 'rgba(0,0,0,.65)' },
+            lid: '<path d="M44 82H156" stroke="#facc15" stroke-width="2" opacity=".85"/>' +
+                '<polygon points="' + star(100, 80, 10, 4, 5) + '" fill="#facc15" stroke="#6b4c0c" stroke-width="1"/>',
+            emb: '<path d="M100 110L122 130L100 156L78 130Z" fill="url(#' + k + 'd)" stroke="#7a4a00" stroke-width="1.5"/>' +
+                '<path d="M78 130H122M100 110V156" stroke="#7a4a00" stroke-width="1" opacity=".6"/>' +
+                '<circle cx="100" cy="130" r="3" fill="#fff7cc"/>'
+        };
+    };
+
     // ---------- fallback theme (unknown key): derive from primary/dark ----------
     T._generic = function (k, theme) {
         var p = theme.primary || '#ff6b35', d = theme.dark || '#222';

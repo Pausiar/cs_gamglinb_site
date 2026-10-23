@@ -38,10 +38,24 @@ function evOf(c) {
     return c.items.reduce((sum, it, i) => sum + chances[i] / 100 * it.price, 0);
 }
 
-test('catalog size: 120-210 skins across every rarity, 16+ cases', () => {
-    assert.ok(allSkins.length >= 120 && allSkins.length <= 210, 'skins: ' + allSkins.length);
+test('catalog size: every weapon family, 22+ cases', () => {
+    assert.ok(allSkins.length >= 250 && allSkins.length <= 400, 'skins: ' + allSkins.length);
     RARITIES.forEach(r => assert.ok(data.skins[r].length >= 4, r + ' has ' + data.skins[r].length));
-    assert.ok(data.cases.length >= 16, 'cases: ' + data.cases.length);
+    assert.ok(data.cases.length >= 22, 'cases: ' + data.cases.length);
+    // every CS2 weapon family used by the new cases has at least one skin
+    const weapons = new Set(allSkins.map(s => s.name.replace(/^★ /, '').split(' | ')[0]));
+    ['AUG', 'SG 553', 'Galil AR', 'FAMAS', 'MAG-7', 'M249', 'Negev', 'Nova', 'SCAR-20',
+        'CZ75-Auto', 'R8 Revolver', 'Zeus x27', 'MAC-10', 'MP9', 'MP7', 'MP5-SD', 'UMP-45',
+        'P90', 'PP-Bizon', 'Sawed-Off', 'XM1014', 'Dual Berettas', 'Five-SeveN', 'P2000'
+    ].forEach(w => assert.ok(weapons.has(w), 'missing weapon ' + w));
+});
+
+test('prices are labelled as real market references', () => {
+    assert.equal(data.priceSource.currency, 'EUR');
+    assert.match(data.priceSource.provider, /Skinport/);
+    assert.match(data.priceSource.updated, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(data.priceSource.matched >= 250, 'matched ' + data.priceSource.matched);
+    assert.equal(data.priceSource.total, allSkins.length);
 });
 
 test('original skin ids 1-34 keep their name and rarity', () => {
@@ -65,8 +79,12 @@ test('skin ids and names are unique, prices positive, tiers broadly ordered by p
     for (let i = 1; i < RARITIES.length; i++) {
         assert.ok(mean(RARITIES[i]) > mean(RARITIES[i - 1]), RARITIES[i] + ' should be pricier than ' + RARITIES[i - 1]);
     }
-    assert.equal(allSkins.find(s => s.id === 27).price, 3500);
-    assert.equal(allSkins.find(s => s.id === 21).price, 18);
+    // Real market prices keep the tier order sensible: a Dragon Lore is worth many Redlines.
+    const lore = allSkins.find(s => s.id === 27).price;
+    const redline = allSkins.find(s => s.id === 21).price;
+    assert.ok(lore > 1000, 'Dragon Lore: ' + lore);
+    assert.ok(redline > 10, 'Redline: ' + redline);
+    assert.ok(lore > redline * 10, lore + ' vs ' + redline);
 });
 
 test('every skin has its own Steam CDN image (no two skins share one, none is the placeholder)', () => {

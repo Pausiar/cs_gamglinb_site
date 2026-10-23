@@ -126,3 +126,15 @@
         padding: 36px 16px;
     }
 }
+
+/* Legal pages: fields the owner must fill before publishing (LSSI art. 10 / GDPR art. 13) */
+.legal-notice.legal-todo {
+    background: rgba(247, 201, 75, 0.08);
+    border-color: rgba(247, 201, 75, 0.45);
+    border-left-color: #f7c94b;
+    font-size: 15px;
+}
+
+.legal-notice.legal-todo code {
+    white-space: nowrap;
+}

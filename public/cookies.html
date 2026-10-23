@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Cookies — SkinDrop</title>
+    <meta name="description" content="Política de cookies de SkinDrop: solo cookies técnicas de sesión y almacenamiento local para preferencias y el perfil de invitado. Sin publicidad ni analítica.">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-page="cookies">
+    <div id="siteHeader"></div>
+
+    <main class="main-content">
+        <section class="page-section">
+            <div class="section-header">
+                <h2><i class="fas fa-cookie-bite"></i> POLÍTICA DE COOKIES</h2>
+            </div>
+            <article class="legal">
+                <p class="legal-updated">Última actualización: 23 de octubre de 2026</p>
+                <div class="legal-notice">
+                    SkinDrop <strong>no usa cookies publicitarias, de perfilado ni herramientas de analítica</strong>. Solo utilizamos cookies técnicas
+                    imprescindibles para mantener tu sesión y almacenamiento local para recordar tus preferencias. Por eso no verás un banner de consentimiento:
+                    estas cookies están exentas del consentimiento previo, pero te informamos de ellas aquí.
+                </div>
+
+                <h3>1. Qué son las cookies y el almacenamiento local</h3>
+                <p>Las cookies son pequeños archivos que el navegador guarda al visitar un sitio. El almacenamiento local (<em>localStorage</em>) funciona de forma
+                parecida, pero los datos no se envían automáticamente al servidor. Ambos se guardan en tu dispositivo y puedes borrarlos desde la configuración
+                de tu navegador.</p>
+
+                <h3>2. Cookies que usamos</h3>
+                <ul>
+                    <li><strong><code>sd_session</code></strong> — cookie de sesión HttpOnly. Mantiene tu inicio de sesión con Steam. Duración máxima: 7 días.
+                        Es imprescindible para usar el perfil del servidor.</li>
+                    <li><strong><code>sd_login_state</code></strong> — cookie temporal de seguridad del inicio de sesión con Steam. Duración: 10 minutos.</li>
+                    <li><strong><code>sd_hint</code></strong> — cookie legible por el navegador que indica que probablemente existe una sesión de Steam, para mostrar
+                        el saldo correcto mientras carga el perfil. No contiene datos personales ni se usa para identificarte. Duración: la de la sesión.</li>
+                </ul>
+
+                <h3>3. Almacenamiento local que usamos</h3>
+                <ul>
+                    <li><strong><code>skinDropState</code></strong> — tu perfil de invitado (saldo y skins virtuales). Solo existe si juegas sin iniciar sesión.</li>
+                    <li><strong><code>sd_age_ok</code></strong> — recuerda que has confirmado que eres mayor de 18 años, para no volver a mostrarte el aviso.</li>
+                    <li><strong><code>skinDropMuted</code></strong> — recuerda si has silenciado los sonidos del sitio.</li>
+                    <li><strong><code>skinDropBattleFast</code></strong> — recuerda si prefieres el modo rápido en las batallas.</li>
+                    <li><strong><code>skinDropBattleTab</code></strong> — recuerda si estabas en la pestaña de bots o de jugadores.</li>
+                </ul>
+
+                <h3>4. Terceros</h3>
+                <p>Las fuentes, los iconos y las imágenes de las skins se cargan desde servidores de terceros (Google Fonts, cdnjs y Steam CDN). Esos proveedores
+                pueden recibir tu dirección IP y datos técnicos de la conexión al servir los archivos. No integramos cookies publicitarias ni píxeles de seguimiento.
+                Más información en la <a href="/privacidad" data-page-link="privacidad">Política de Privacidad</a>.</p>
+
+                <h3>5. Cómo eliminar o bloquear cookies</h3>
+                <p>Puedes configurar tu navegador para bloquear o eliminar cookies y datos locales. Ten en cuenta que si bloqueas las cookies técnicas
+                <code>sd_session</code> o <code>sd_login_state</code> no podrás iniciar sesión con Steam; el modo invitado seguirá funcionando. Instrucciones habituales:</p>
+                <ul>
+                    <li>Chrome: Configuración → Privacidad y seguridad → Cookies y otros datos de sitios.</li>
+                    <li>Firefox: Ajustes → Privacidad y seguridad → Cookies y datos del sitio.</li>
+                    <li>Safari: Ajustes → Privacidad → Gestionar datos de sitios web.</li>
+                    <li>Edge: Configuración → Cookies y permisos del sitio.</li>
+                </ul>
+
+                <h3>6. Cambios</h3>
+                <p>Si en el futuro incorporamos cookies de otro tipo, actualizaremos esta política y, cuando sea necesario, pediremos tu consentimiento previo.
+                La fecha de la última revisión figura al principio de esta página.</p>
+            </article>
+        </section>
+    </main>
+
+    <div id="siteFooter"></div>
+
+    <script src="js/layout.js"></script>
+    <script src="js/sfx.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

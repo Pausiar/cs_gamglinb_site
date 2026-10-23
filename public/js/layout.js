@@ -30,6 +30,9 @@
     var FOOTER_LINKS = [
         { key: 'terminos', href: '/terminos', label: 'Términos de Servicio' },
         { key: 'privacidad', href: '/privacidad', label: 'Política de Privacidad' },
+        { key: 'cookies', href: '/cookies', label: 'Política de Cookies' },
+        { key: 'aviso-legal', href: '/aviso-legal', label: 'Aviso Legal' },
+        { key: 'juego-responsable', href: '/juego-responsable', label: 'Juego Responsable' },
         { key: 'provably-fair', href: '/provably-fair', label: 'Provably Fair' },
         { key: 'contacto', href: '/contacto', label: 'Contacto' }
     ];
@@ -63,6 +66,63 @@
         return String(s).replace(/[&<>"']/g, function (c) {
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
+    }
+
+    // Site-wide legal notice: visible on every page, right at the top of the content.
+    function legalBarHtml() {
+        return '<div class="legal-bar" role="note" aria-label="Aviso legal">' +
+            '<span><i class="fas fa-circle-info"></i> <strong>Simulación:</strong> sin dinero real, sin depósitos y sin retiradas</span>' +
+            '<span>+18</span>' +
+            '<span>Skins y saldo virtuales, sin valor económico</span>' +
+            '<a href="' + esc(hrefOfPage('aviso-legal')) + '">Más información</a>' +
+        '</div>';
+    }
+
+    // 18+ age confirmation shown once (localStorage, see the cookie policy).
+    function ageGateHtml() {
+        return '' +
+            '<div class="age-gate" id="ageGate" hidden>' +
+                '<div class="age-gate-card" role="dialog" aria-modal="true" aria-labelledby="ageGateTitle">' +
+                    '<i class="fas fa-shield-halved age-gate-icon"></i>' +
+                    '<h2 id="ageGateTitle">Solo para mayores de 18 años</h2>' +
+                    '<p>SkinDrop es un simulador de cajas de CS2 <strong>sin dinero real</strong>: el saldo y las skins son virtuales y no se pueden retirar. ' +
+                    'No es un casino ni un sitio de apuestas. Si eres menor de edad, no puedes usar el sitio.</p>' +
+                    '<div class="age-gate-actions">' +
+                        '<button type="button" class="age-yes" id="ageGateYes">Soy mayor de 18 años</button>' +
+                        '<button type="button" class="age-no" id="ageGateNo">No tengo 18 años</button>' +
+                    '</div>' +
+                    '<p class="age-gate-links"><a href="' + esc(hrefOfPage('terminos')) + '">Términos</a> · ' +
+                        '<a href="' + esc(hrefOfPage('privacidad')) + '">Privacidad</a> · ' +
+                        '<a href="' + esc(hrefOfPage('juego-responsable')) + '">Juego responsable</a></p>' +
+                    '<p class="age-gate-error" id="ageGateError" role="alert" hidden>Debes ser mayor de 18 años para usar SkinDrop.</p>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function initAgeGate() {
+        // Legal and help pages stay readable without confirming age; the gate covers the game pages.
+        if (['terminos', 'privacidad', 'cookies', 'aviso-legal', 'juego-responsable', 'contacto'].indexOf(current) !== -1) return;
+        var KEY = 'sd_age_ok';
+        var accepted = false;
+        try { accepted = window.localStorage.getItem(KEY) === '1'; } catch (e) { accepted = false; }
+        if (accepted) return;
+        var gate = document.getElementById('ageGate');
+        if (!gate) return;
+        document.documentElement.classList.add('sd-age-locked');
+        gate.hidden = false;
+        var yes = document.getElementById('ageGateYes');
+        var no = document.getElementById('ageGateNo');
+        var error = document.getElementById('ageGateError');
+        if (yes) yes.addEventListener('click', function () {
+            try { window.localStorage.setItem(KEY, '1'); } catch (e) { /* private mode */ }
+            gate.hidden = true;
+            document.documentElement.classList.remove('sd-age-locked');
+        });
+        if (no) no.addEventListener('click', function () {
+            if (error) error.hidden = false;
+            if (yes) yes.focus();
+        });
+        if (yes) yes.focus();
     }
 
     function headerHtml(current) {
@@ -121,9 +181,10 @@
                             '</div>' +
                             '<p class="promo-hint">* Introduce un código válido para recibir saldo</p>' +
                         '</div>' +
-                        '<div class="payment-methods">' +
-                            '<h3>Métodos de Pago</h3>' +
-                            '<p class="coming-soon"><i class="fas fa-lock"></i> Próximamente...</p>' +
+                        '<div class="modal-legal-note">' +
+                            '<i class="fas fa-shield-halved"></i>' +
+                            '<p><strong>Sin dinero real.</strong> Solo se obtiene saldo virtual con códigos promocionales. ' +
+                            'No se aceptan pagos, depósitos ni tarjetas, y el saldo no se puede retirar ni canjear.</p>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
@@ -143,8 +204,10 @@
                     '</div>' +
                     '<div class="footer-links">' + links + '</div>' +
                     '<div class="footer-disclaimer">' +
-                        '<p>Este sitio es solo para entretenimiento. No se realizan transacciones reales.</p>' +
-                        '<p>+18 | Juega con responsabilidad</p>' +
+                        '<p><strong>SkinDrop es una simulación.</strong> No es un casino ni un sitio de apuestas: no se juega dinero real, ' +
+                        'no hay depósitos ni retiradas y las skins no tienen valor económico.</p>' +
+                        '<p>+18 | Juega con responsabilidad · ' +
+                        '<a href="' + esc(hrefOfPage('juego-responsable')) + '">Juego responsable</a></p>' +
                     '</div>' +
                 '</div>' +
             '</footer>';
@@ -213,8 +276,13 @@
     var current = pageKey();
     mount('siteHeader', headerHtml(current) + modalHtml(), 'start');
     mount('siteFooter', footerHtml(), 'end');
+    // The legal notice lives inside the page content so it never overlaps the fixed header.
+    var main = document.querySelector('main.main-content');
+    if (main) main.insertAdjacentHTML('afterbegin', legalBarHtml());
+    document.body.insertAdjacentHTML('beforeend', ageGateHtml());
     fixPageLinks();
     initDrawer();
+    initAgeGate();
 
     window.SkinDropLayout = {
         NAV: NAV,

@@ -172,13 +172,14 @@ test('lobbyPay / lobbyRefund / lobbyPayout are idempotent and keep the ledger', 
 
     // payout is applied once
     const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    const itemsValue = engine.round2(items.reduce((sum, i) => sum + engine.skinInfo(i.id).price, 0));
     out = await h.game.runAction(A, 'lobbyPayout', { lobbyId: 'L3', itemIds: items.map(i => i.id) });
     assert.equal(out.state.inventory.length, 3);
-    assert.equal(out.state.stats.totalWon, 0.17);
+    assert.equal(out.state.stats.totalWon, itemsValue);
     assert.ok(out.state.history.every(x => x.caseName === 'Batalla PvP'));
     out = await h.game.runAction(A, 'lobbyPayout', { lobbyId: 'L3', itemIds: items.map(i => i.id) });
     assert.equal(out.state.inventory.length, 3);
-    assert.equal(out.state.stats.totalWon, 0.17);
+    assert.equal(out.state.stats.totalWon, itemsValue);
 
     // the ledger markers are plain short strings
     const profile = await h.game.getProfile(A);
@@ -200,8 +201,11 @@ test('lobbyPayout credits items that do not fit in a full inventory', async () =
     const out = await h.game.runAction(A, 'lobbyPayout', { lobbyId: 'L9', itemIds: [1, 2, 3] });
     assert.equal(out.state.inventory.length, 500);
     assert.equal(out.result.autoSold, 2);
-    // kept the most valuable one (id 2, 0.08), sold the other two at their price
-    assert.equal(out.state.balance, Math.round((before + 0.05 + 0.04) * 100) / 100);
+    // kept the most valuable one, sold the other two at their catalog price
+    const won = [1, 2, 3].map(id => engine.skinInfo(id));
+    const kept = won.slice().sort((a, b) => b.price - a.price)[0];
+    const sold = engine.round2(won.filter(x => x.id !== kept.id).reduce((sum, x) => sum + x.price, 0));
+    assert.equal(out.state.balance, engine.round2(before + sold));
 });
 
 // ==================== service ====================
