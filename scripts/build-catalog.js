@@ -415,7 +415,23 @@ const ADDED = [
     [302, "AK-47 | Olive Polycam", 0.18],
     [303, "AK-47 | Wintergreen", 0.88],
     [304, "AK-47 | Steel Delta", 1.77],
-    [305, "Five-SeveN | Coolant", 0.03]
+    [305, "Five-SeveN | Coolant", 0.03],
+    // ---- weapon-variety additions (ids 306+) ----
+    [306, "M4A4 | Buzz Kill", 2],
+    [307, "M4A1-S | Chantico's Fire", 40],
+    [308, "AK-47 | Slate", 0.8],
+    [309, "AK-47 | Frontside Misty", 4],
+    [310, "AWP | Worm God", 40],
+    [311, "Desert Eagle | Blaze", 500],
+    [312, "Glock-18 | Fade", 800],
+    [313, "Five-SeveN | Fowl Play", 0.8],
+    [314, "M4A1-S | Hot Rod", 40],
+    [315, "AWP | Oni Taiji", 60],
+    [316, "Sawed-Off | Kiss♥Love", 1.2],
+    [317, "XM1014 | Tranquility", 0.5],
+    [318, "★ Karambit | Crimson Web", 900],
+    [319, "★ Butterfly Knife | Doppler", 1000],
+    [320, "★ Talon Knife | Fade", 1200]
 ];
 
 // ==================== CASE SPEC ====================
@@ -539,7 +555,22 @@ const CASES = [
         'CZ75-Auto | Victoria', 'R8 Revolver | Fade', 'Dual Berettas | Cobra Strike', 'Five-SeveN | Hyper Beast', 'MAG-7 | Cinquedea',
         'Sawed-Off | Wasteland Princess', 'MP9 | Starlight Protector', 'MP7 | Bloodsport', 'MP5-SD | Oxide Oasis', 'P90 | Asiimov',
         'Tec-9 | Decimator', 'AK-47 | Vulcan', 'AWP | Asiimov', 'M4A1-S | Printstream', 'AWP | Neo-Noir',
-        '★ Flip Knife | Night', '★ Karambit | Doppler', '★ Sport Gloves | Pandora'] }
+        '★ Flip Knife | Night', '★ Karambit | Doppler', '★ Sport Gloves | Pandora'] },
+    // ---- new cases (ids 23-25) ----
+    { id: 23, name: 'Caja Mortal', theme: T('mortal', 'Sombras de guerra', '#dc2626', '#1f0505'), price: 5.00, mass: { consumer: 75, industrial: 25 }, pool: [
+        'AWP | Worm God', 'M4A4 | Buzz Kill', 'AK-47 | Slate', 'AK-47 | Frontside Misty', 'Five-SeveN | Fowl Play', 'M4A1-S | Chantico\'s Fire',
+        'XM1014 | Tranquility', 'Sawed-Off | Kiss♥Love', 'M4A1-S | Hot Rod', 'Desert Eagle | Blaze', 'AK-47 | Redline',
+        'AWP | Pit Viper', 'M4A4 | Magnesium', 'USP-S | Torque', 'Glock-18 | Sand Dune', 'P250 | Sand Dune', 'MAC-10 | Silver', 'Negev | Army Sheen'] },
+    { id: 24, name: 'Caja Oriental', theme: T('oriental', 'Tinta y acero', '#e11d48', '#2b0a14'), price: 9.00, pool: [
+        'AWP | Oni Taiji', 'AK-47 | Fire Serpent', 'M4A1-S | Hot Rod', 'AWP | Asiimov', 'Desert Eagle | Blaze', 'M4A4 | Howl',
+        'AK-47 | Frontside Misty', 'AWP | Worm God', 'M4A1-S | Chantico\'s Fire', 'Glock-18 | Water Elemental', 'USP-S | Kill Confirmed',
+        'AWP | Redline', 'AK-47 | Neon Rider', 'P90 | Trigon'] },
+    { id: 25, name: 'Caja Infierno', theme: T('inferno', 'Brasas de medianoche', '#f97316', '#1f0a02'), price: 60.00,
+        mass: { consumer: 30, restricted: 30, classified: 20, covert: 8, gold: 12 }, pool: [
+        'P250 | Sand Dune', 'MAC-10 | Silver', 'Negev | Army Sheen', '★ Karambit | Crimson Web', '★ Butterfly Knife | Doppler', '★ Talon Knife | Fade', '★ Karambit | Doppler', '★ Flip Knife | Fade',
+        '★ Huntsman Knife | Blue Steel', 'AWP | Dragon Lore', 'AK-47 | Fire Serpent', 'M4A1-S | Golden Coil', 'AWP | Hyper Beast',
+        'Desert Eagle | Kumicho Dragon', '★ Bayonet | Tiger Tooth', 'AWP | Asiimov', 'Glock-18 | Dragon Tattoo', 'M4A4 | Howl',
+        'AK-47 | Redline', 'AWP | Redline', 'Five-SeveN | Fowl Play', 'M4A1-S | Hot Rod', 'Sawed-Off | Kiss♥Love'] }
 ];
 
 // ==================== CATALOG LOADING ====================
