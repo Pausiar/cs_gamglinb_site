@@ -289,7 +289,6 @@ const ADDED = [
     // added for the Cyberpunk case
     [210, "P90 | Module", 0.5],
     [211, "MP5-SD | Gauss", 1.5],
-    [212, "MP5-SD | Lab Rats", 2],
     [213, "MP5-SD | Kitbash", 3],
     [214, "P250 | Digital Architect", 3],
     [215, "MP5-SD | Phosphor", 8],
@@ -443,55 +442,50 @@ const CASES = [
         'G3SG1 | Safari Mesh', 'Five-SeveN | Forest Night', 'M4A1-S | Boreal Forest', 'AK-47 | Safari Mesh', 'AWP | Pit Viper',
         'Glock-18 | Bunsen Burner', 'USP-S | Torque'] },
     { id: 2, name: 'Caja de Armas', theme: T('arsenal', 'Arsenal militar', '#a3a36b', '#3b3b24'), price: 2.50, pool: [
-        'MAC-10 | Silver', 'G3SG1 | Safari Mesh', 'UMP-45 | Urban DDPAT', 'Five-SeveN | Forest Night', 'Dual Berettas | Contractor',
-        'AK-47 | Safari Mesh', 'Glock-18 | Night', 'USP-S | Forest Leaves', 'M4A1-S | Boreal Forest', 'AWP | Pit Viper', 'M4A4 | Magnesium',
-        'Desert Eagle | Cobalt', 'P90 | Trigon', 'AK-47 | Blue Laminate', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'AWP | Redline',
+        'MAC-10 | Silver', 'UMP-45 | Urban DDPAT', 'Five-SeveN | Forest Night', 'Dual Berettas | Contractor',
+        'AK-47 | Safari Mesh', 'Glock-18 | Night', 'USP-S | Forest Leaves', 'M4A1-S | Boreal Forest', 'AWP | Pit Viper', 'M4A4 | Magnesium', 'P90 | Trigon', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'AWP | Redline',
         'M4A4 | Desolate Space', 'FAMAS | Colony'] },
     { id: 3, name: 'Caja AK-47', theme: T('kalashnikov', 'Fiebre del Kalashnikov', '#e4572e', '#4a1c10'), price: 5.00, pool: [
-        'AK-47 | Safari Mesh', 'AK-47 | Predator', 'AK-47 | Baroque Purple', 'AK-47 | Black Laminate', 'AK-47 | Elite Build', 'AK-47 | Uncharted',
+        'AK-47 | Safari Mesh', 'AK-47 | Predator', 'AK-47 | Baroque Purple', 'AK-47 | Elite Build', 'AK-47 | Uncharted',
         'AK-47 | Blue Laminate', 'AK-47 | Rat Rod', 'AK-47 | Orbit Mk01', 'AK-47 | First Class', 'AK-47 | Ice Coaled', 'AK-47 | Point Disarray',
-        'AK-47 | Redline', 'AK-47 | Jet Set', 'AK-47 | Case Hardened', 'AK-47 | Asiimov', 'AK-47 | Neon Rider', 'AK-47 | Head Shot',
-        'AK-47 | Hydroponic', 'AK-47 | Vulcan', 'AK-47 | Fire Serpent', 'AK-47 | Gold Arabesque', 'AK-47 | VariCamo Grey',
+        'AK-47 | Redline', 'AK-47 | Asiimov', 'AK-47 | Neon Rider', 'AK-47 | Head Shot', 'AK-47 | VariCamo Grey',
         'AK-47 | Olive Polycam', 'AK-47 | Wintergreen', 'AK-47 | Steel Delta'] },
     { id: 4, name: 'Caja AWP', theme: T('sniper', 'Ojo de francotirador', '#4cc9f0', '#0b2a3a'), price: 8.00, pool: [
         'AWP | Safari Mesh', 'AWP | Sun in Leo', 'AWP | Acheron', 'AWP | Pit Viper', 'AWP | Phobos', 'AWP | Pink DDPAT', 'AWP | Mortis',
         'AWP | Fever Dream', 'AWP | Redline', 'AWP | Corticera', 'AWP | Silk Tiger', 'AWP | Neo-Noir', 'AWP | Electric Hive', 'AWP | Asiimov',
-        'AWP | Hyper Beast', 'AWP | Lightning Strike', 'AWP | Fade', 'AWP | The Prince', 'AWP | Medusa', 'AWP | Dragon Lore', 'AWP | Gungnir'] },
+        'AWP | Hyper Beast',] },
     { id: 5, name: 'Caja Premium', theme: T('premium', 'Lujo negro y oro', '#f7c94b', '#1a1508'), price: 15.00, pool: [
-        'M4A1-S | Boreal Forest', 'AK-47 | Safari Mesh', 'AWP | Pit Viper', 'M4A4 | Magnesium', 'Desert Eagle | Cobalt', 'M4A1-S | Icarus Fell', 'M4A1-S | Flashback',
+        'M4A1-S | Boreal Forest', 'AK-47 | Safari Mesh', 'AWP | Pit Viper', 'M4A4 | Magnesium', 'M4A1-S | Flashback',
         'AWP | Redline', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'USP-S | Orion', 'Glock-18 | Twilight Galaxy', 'USP-S | Serum',
         'Desert Eagle | Kumicho Dragon', 'M4A1-S | Blue Phosphor', 'AWP | Asiimov', 'AK-47 | Vulcan', 'AK-47 | Neon Rider', 'M4A1-S | Hyper Beast',
         'M4A1-S | Printstream', 'M4A1-S | Golden Coil', 'Desert Eagle | Printstream', '★ Gut Knife | Night', '★ Flip Knife | Night'] },
     { id: 6, name: 'Caja de Cuchillos', theme: T('blade', 'Filo de acero', '#c0d6df', '#1e2a30'), price: 25.00,
         mass: { restricted: 45, classified: 25, covert: 3, gold: 27 }, pool: [
-        'Glock-18 | Weasel', 'AK-47 | Orbit Mk01', 'AWP | Pink DDPAT', 'AK-47 | First Class', 'Glock-18 | Dragon Tattoo', 'P250 | Nuclear Threat',
-        'Five-SeveN | Neon Kimono', 'M4A1-S | Icarus Fell', 'AWP | Redline', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'AWP | Asiimov',
+        'Glock-18 | Weasel', 'AK-47 | Orbit Mk01', 'AWP | Pink DDPAT', 'P250 | Nuclear Threat', 'AWP | Redline', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'AWP | Asiimov',
         'AK-47 | Vulcan', '★ Gut Knife | Safari Mesh', '★ Gut Knife | Night', '★ Gut Knife | Bright Water', '★ Falchion Knife | Forest DDPAT',
-        '★ Shadow Daggers | Night', '★ Flip Knife | Night', '★ Huntsman Knife | Night', '★ Huntsman Knife | Blue Steel', '★ Bayonet | Blue Steel',
-        '★ Falchion Knife | Fade', '★ Flip Knife | Fade', '★ Karambit | Night', '★ Bayonet | Slaughter', '★ Karambit | Doppler',
-        '★ Bayonet | Tiger Tooth', '★ Flip Knife | Doppler', 'Glock-18 | Ocean Topo', 'AK-47 | VariCamo Grey', 'P250 | Sand Dune'] },
+        '★ Shadow Daggers | Night', '★ Flip Knife | Night', '★ Huntsman Knife | Night', '★ Huntsman Knife | Blue Steel', '★ Bayonet | Blue Steel', '★ Flip Knife | Fade', '★ Bayonet | Slaughter',
+        '★ Bayonet | Tiger Tooth', 'Glock-18 | Ocean Topo', 'AK-47 | VariCamo Grey', 'P250 | Sand Dune'] },
     { id: 7, name: 'Caja Legendaria', theme: T('legend', 'Corona de los legendarios', '#b388ff', '#2a1450'), price: 50.00, pool: [
         'AWP | Pit Viper', 'M4A4 | Magnesium', 'AWP | Redline', 'M4A1-S | Atomic Alloy', 'AK-47 | Redline', 'USP-S | Kill Confirmed',
-        'Glock-18 | Water Elemental', 'AWP | Asiimov', 'AK-47 | Vulcan', 'M4A4 | Howl', 'AWP | Dragon Lore', 'M4A1-S | Knight',
-        '★ Karambit | Doppler', '★ Butterfly Knife | Fade', '★ M9 Bayonet | Crimson Web', '★ Sport Gloves | Pandora', '★ Skeleton Knife | Fade',
+        'Glock-18 | Water Elemental', 'AWP | Asiimov', 'AK-47 | Vulcan',
+        '★ Karambit | Doppler', '★ M9 Bayonet | Crimson Web', '★ Skeleton Knife | Fade',
         '★ Bayonet | Tiger Tooth', 'AK-47 | Hydroponic', 'M4A4 | Hellfire', 'AWP | Electric Hive', 'AK-47 | Neon Revolution', 'AK-47 | The Empress', 'M4A4 | Asiimov', 'P90 | Death by Kitty', '★ M9 Bayonet | Doppler'] },
     { id: 8, name: 'Caja Dragon', theme: T('dragon', 'Aliento de dragón', '#ff3d3d', '#3a0a05'), price: 100.00, pool: [
         'Glock-18 | Dragon Tattoo', 'P2000 | Imperial Dragon', 'Desert Eagle | Kumicho Dragon', 'SSG 08 | Dragonfire', 'P90 | Emerald Dragon',
-        'AWP | Asiimov', 'AK-47 | Vulcan', 'AWP | Hyper Beast', 'M4A1-S | Golden Coil', 'M4A1-S | Knight', 'AWP | Lightning Strike',
-        'AK-47 | Fire Serpent', 'AWP | Dragon Lore', 'M4A4 | Howl', '★ Bayonet | Tiger Tooth', '★ Karambit | Doppler', '★ M9 Bayonet | Crimson Web',
-        '★ Butterfly Knife | Fade', '★ Skeleton Knife | Fade', '★ Sport Gloves | Pandora', '★ Karambit | Fade'] },
+        'AWP | Asiimov', 'AK-47 | Vulcan', 'AWP | Hyper Beast', 'M4A1-S | Golden Coil', 'AWP | Lightning Strike',
+        'AK-47 | Fire Serpent', '★ Bayonet | Tiger Tooth', '★ Karambit | Doppler', '★ M9 Bayonet | Crimson Web', '★ Skeleton Knife | Fade',] },
     // ---- new cases (ids 9+) ----
     { id: 9, name: 'Caja Neón', theme: T('neon', 'Luces de neón', '#ff2bd6', '#1a0530'), price: 4.00, pool: [
-        'MP9 | Hot Rod', 'Glock-18 | Bunsen Burner', 'P90 | Neoqueen', 'MP7 | Neon Ply', 'Nova | Hyper Beast', 'Five-SeveN | Neon Kimono',
-        'P250 | Nuclear Threat', 'Tec-9 | Fuel Injector', 'Glock-18 | Neo-Noir', 'MAC-10 | Neon Rider', 'M4A4 | Neo-Noir', 'USP-S | Neo-Noir',
-        'AWP | Neo-Noir', 'AK-47 | Neon Revolution', 'M4A1-S | Hyper Beast', 'AK-47 | Neon Rider', 'AWP | Hyper Beast'] },
+        'MP9 | Hot Rod', 'Glock-18 | Bunsen Burner', 'P90 | Neoqueen', 'MP7 | Neon Ply', 'Nova | Hyper Beast',
+        'P250 | Nuclear Threat', 'Tec-9 | Fuel Injector', 'Glock-18 | Neo-Noir', 'M4A4 | Neo-Noir', 'USP-S | Neo-Noir',
+        'AWP | Neo-Noir', 'AK-47 | Neon Rider', 'AWP | Hyper Beast'] },
     { id: 10, name: 'Caja Desierto', theme: T('desert', 'Dunas y espejismos', '#e0a458', '#3d2410'), price: 1.50, pool: [
         'P250 | Sand Dune', 'Glock-18 | Sand Dune', 'PP-Bizon | Sand Dashed', 'Tec-9 | Sandstorm', 'P90 | Desert Warfare', 'XM1014 | CaliCamo',
-        'G3SG1 | Safari Mesh', 'AK-47 | Safari Mesh', 'AWP | Safari Mesh', 'Sawed-Off | Rust Coat', 'Desert Eagle | Oxide Blaze', 'AWP | Sun in Leo',
-        'Desert Eagle | Heirloom', 'AWP | Desert Hydra', '★ Hand Wraps | Desert Shamagh'] },
+        'G3SG1 | Safari Mesh', 'AK-47 | Safari Mesh', 'AWP | Safari Mesh', 'Sawed-Off | Rust Coat', 'Desert Eagle | Oxide Blaze',
+        'Desert Eagle | Heirloom',] },
     { id: 11, name: 'Caja Ártica', theme: T('arctic', 'Hielo eterno', '#8fdcff', '#0c2230'), price: 4.50, pool: [
-        'P250 | Boreal Forest', 'M4A1-S | Boreal Forest', 'MP7 | Whiteout', 'Tec-9 | Ice Cap', 'XM1014 | Frost Borre', 'UMP-45 | Arctic Wolf',
-        'Glock-18 | Steel Disruption', 'M4A1-S | Icarus Fell', 'AK-47 | Ice Coaled', 'M4A4 | Desolate Space', '★ Gut Knife | Bright Water',
+        'P250 | Boreal Forest', 'M4A1-S | Boreal Forest', 'Tec-9 | Ice Cap', 'UMP-45 | Arctic Wolf',
+        'Glock-18 | Steel Disruption', 'AK-47 | Ice Coaled', 'M4A4 | Desolate Space', '★ Gut Knife | Bright Water',
         '★ Huntsman Knife | Blue Steel', '★ Skeleton Knife | Boreal Forest', '★ Driver Gloves | Snow Leopard'] },
     { id: 12, name: 'Caja Glock', theme: T('glock', 'Ráfaga de polímero', '#ffb703', '#1c1c1f'), price: 3.00, pool: [
         'Glock-18 | Sand Dune', 'Glock-18 | Groundwater', 'Glock-18 | Night', 'Glock-18 | Ironwork', 'Glock-18 | Bunsen Burner',
@@ -501,9 +495,9 @@ const CASES = [
     { id: 13, name: 'Caja Pistolas', theme: T('pistols', 'Duelo al amanecer', '#2ec4b6', '#06302c'), price: 7.00, pool: [
         'USP-S | Torque', 'USP-S | Stainless', 'Desert Eagle | Night', 'Desert Eagle | Oxide Blaze', 'Five-SeveN | Capillary', 'USP-S | Cyrex',
         'USP-S | Overgrowth', 'Desert Eagle | Heirloom', 'P250 | Asiimov', 'P250 | Muertos', 'Glock-18 | Vogue', 'Glock-18 | Water Elemental',
-        'Desert Eagle | Conspiracy', 'Five-SeveN | Neon Kimono', 'P250 | Nuclear Threat', 'USP-S | Caiman', 'Tec-9 | Fuel Injector',
-        'Five-SeveN | Monkey Business', 'USP-S | Orion', 'Glock-18 | Twilight Galaxy', 'R8 Revolver | Llama Cannon', 'USP-S | Serum',
-        'P2000 | Imperial Dragon', 'USP-S | Kill Confirmed', 'Desert Eagle | Kumicho Dragon', 'Desert Eagle | Printstream',
+        'Desert Eagle | Conspiracy', 'P250 | Nuclear Threat', 'USP-S | Caiman', 'Tec-9 | Fuel Injector',
+        'Five-SeveN | Monkey Business', 'USP-S | Orion', 'R8 Revolver | Llama Cannon', 'USP-S | Serum',
+        'P2000 | Imperial Dragon', 'Desert Eagle | Kumicho Dragon', 'Desert Eagle | Printstream',
         'P250 | Sand Dune', 'Five-SeveN | Coolant'] },
     { id: 14, name: 'Caja Guantes', theme: T('gloves', 'Guantes de élite', '#ff5e8a', '#3a0a1a'), price: 150.00, pool: [
         '★ Hand Wraps | Spruce DDPAT', '★ Hand Wraps | Desert Shamagh', '★ Driver Gloves | Black Tie', '★ Sport Gloves | Arid',
@@ -511,25 +505,23 @@ const CASES = [
         '★ Hand Wraps | Duct Tape', '★ Sport Gloves | Slingshot', '★ Broken Fang Gloves | Jade', '★ Hydra Gloves | Emerald',
         '★ Hand Wraps | Cobalt Skulls', '★ Driver Gloves | Snow Leopard', '★ Moto Gloves | Spearmint', '★ Sport Gloves | Bronze Morph',
         '★ Driver Gloves | Crimson Weave', '★ Specialist Gloves | Crimson Kimono', '★ Moto Gloves | Boom!', '★ Specialist Gloves | Emerald Web',
-        '★ Specialist Gloves | Fade', '★ Sport Gloves | Superconductor', '★ Sport Gloves | Vice', '★ Sport Gloves | Pandora',
-        '★ Sport Gloves | Hedge Maze'] },
+        '★ Specialist Gloves | Fade', '★ Sport Gloves | Superconductor', '★ Sport Gloves | Vice',] },
     { id: 15, name: 'Caja Cyberpunk', theme: T('cyber', 'Futuro en circuito', '#fcee0a', '#1a1800'), price: 12.00, pool: [
-        'P90 | Module', 'MP5-SD | Gauss', 'MP5-SD | Lab Rats', 'MP5-SD | Kitbash', 'P250 | Digital Architect', 'MP5-SD | Phosphor',
+        'P90 | Module', 'MP5-SD | Gauss', 'MP5-SD | Kitbash', 'P250 | Digital Architect', 'MP5-SD | Phosphor',
         'P250 | Asiimov', 'USP-S | Cortex', 'M4A1-S | Control Panel', 'Tec-9 | Fuel Injector', 'M4A4 | Cyber Security', 'M4A4 | Desolate Space',
-        'M4A1-S | Decimator', 'M4A1-S | Blue Phosphor', 'M4A1-S | Mecha Industries', 'M4A4 | Neo-Noir', 'Desert Eagle | Printstream',
+        'M4A1-S | Decimator', 'M4A1-S | Mecha Industries', 'M4A4 | Neo-Noir', 'Desert Eagle | Printstream',
         'AWP | Electric Hive', 'M4A1-S | Printstream', 'M4A1-S | Golden Coil', 'Glock-18 | Gamma Doppler', '★ Flip Knife | Autotronic',
         '★ Bayonet | Autotronic'] },
     { id: 16, name: 'Caja Halloween', theme: T('halloween', 'Noche de brujas', '#ff7a00', '#1a0a2e'), price: 6.00, pool: [
         'P250 | Bone Mask', 'R8 Revolver | Bone Mask', 'Sawed-Off | Yorick', 'SSG 08 | Death\'s Head', 'Nova | Rising Skull', 'M249 | Emerald Poison Dart',
         'M4A4 | Spider Lily', 'MP9 | Ruby Poison Dart', 'M4A1-S | Night Terror', 'R8 Revolver | Skull Crusher', 'M4A4 | Evil Daimyo', 'P250 | Muertos',
         'SSG 08 | Bloodshot', 'AWP | Mortis', 'M4A1-S | Nightmare', 'P90 | Cold Blooded', 'AK-47 | Head Shot', 'Sawed-Off | The Kraken',
-        'M4A4 | Hellfire', '★ Gut Knife | Night', '★ Shadow Daggers | Night', '★ Huntsman Knife | Night', '★ Karambit | Night'] },
+        'M4A4 | Hellfire', '★ Gut Knife | Night', '★ Shadow Daggers | Night', '★ Huntsman Knife | Night',] },
     // ---- weapon-variety cases (ids 17-22) ----
     { id: 17, name: 'Caja Selva', theme: T('jungle', 'Vegetación densa', '#5aa469', '#12301c'), price: 2.00, pool: [
         'P250 | Boreal Forest', 'M4A1-S | Boreal Forest', 'AWP | Safari Mesh', 'G3SG1 | Safari Mesh', 'AK-47 | Safari Mesh',
         'Galil AR | VariCamo', 'Nova | Rain Station', 'MP7 | Prey', 'UMP-45 | Scorched', 'XM1014 | Blue Steel',
-        'SCAR-20 | Blueprint', 'SSG 08 | Hand Brake', 'SSG 08 | Ghost Crusader', 'SSG 08 | Blood in the Water',
-        'AK-47 | Predator', 'AWP | Sun in Leo'] },
+        'SCAR-20 | Blueprint', 'SSG 08 | Hand Brake', 'SSG 08 | Ghost Crusader', 'SSG 08 | Blood in the Water',] },
     { id: 18, name: 'Caja Pesada', theme: T('heavy', 'Potencia bruta', '#c9a227', '#2c2410'), price: 1.00, pool: [
         'M249 | System Lock', 'M249 | Aztec', 'M249 | Nebula Crusader', 'Negev | Man-o\'-war', 'Negev | Loudmouth',
         'Negev | Power Loader', 'SCAR-20 | Blueprint', 'SCAR-20 | Powercore', 'SCAR-20 | Cyrex', 'G3SG1 | Green Cell',
@@ -542,35 +534,32 @@ const CASES = [
         'UMP-45 | Scorched', 'UMP-45 | Grand Prix', 'UMP-45 | Neo-Noir', 'P90 | Desert DDPAT', 'P90 | Attack Vector', 'P90 | Asiimov',
         'PP-Bizon | Candy Apple', 'PP-Bizon | Osiris', 'PP-Bizon | Judgement of Anubis'] },
     { id: 20, name: 'Caja Fusiles', theme: T('rifles', 'Puntería de rifle', '#f97316', '#331605'), price: 8.00, pool: [
-        'AUG | Snake Pit', 'AUG | Lapis Lazuli', 'AUG | Akihabara Accept', 'SG 553 | Bleached', 'SG 553 | Tiger Moth', 'SG 553 | Bulldozer',
+        'AUG | Snake Pit', 'AUG | Lapis Lazuli', 'AUG | Akihabara Accept', 'SG 553 | Bleached', 'SG 553 | Tiger Moth',
         'Galil AR | VariCamo', 'Galil AR | Crimson Tsunami', 'Galil AR | Chatterbox', 'FAMAS | Cyanospatter', 'FAMAS | Pulse', 'FAMAS | Roll Cage',
-        'AK-47 | Safari Mesh', 'AK-47 | Predator', 'AK-47 | Redline', 'M4A1-S | Boreal Forest', 'M4A1-S | Atomic Alloy', 'M4A1-S | Nightmare'] },
+        'AK-47 | Safari Mesh', 'AK-47 | Redline', 'M4A1-S | Boreal Forest', 'M4A1-S | Atomic Alloy', 'M4A1-S | Nightmare'] },
     { id: 21, name: 'Caja Retro', theme: T('retro', 'Onda ochentera', '#e879f9', '#2a0a33'), price: 5.50, pool: [
         'CZ75-Auto | Copper Fiber', 'CZ75-Auto | Hydraulics', 'CZ75-Auto | Victoria', 'R8 Revolver | Nitro', 'R8 Revolver | Blaze', 'R8 Revolver | Fade',
         'Dual Berettas | Stained', 'Dual Berettas | Tread', 'Dual Berettas | Cobra Strike', 'Five-SeveN | Midnight Paintover', 'Five-SeveN | Boost Protocol',
         'Five-SeveN | Hyper Beast', 'P2000 | Royal Baroque', 'P2000 | Obsidian', 'P2000 | Fire Elemental', 'Tec-9 | Army Mesh',
         'Tec-9 | Avalanche', 'Tec-9 | Decimator', 'Zeus x27 | Swamp DDPAT', 'Zeus x27 | Charged Up', 'Zeus x27 | Dragon Snore'] },
-    { id: 22, name: 'Caja Élite', theme: T('elite', 'Solo para coleccionistas', '#facc15', '#2a2205'), price: 160.00, pool: [
-        'AUG | Akihabara Accept', 'SG 553 | Bulldozer', 'Galil AR | Chatterbox', 'FAMAS | Roll Cage', 'P2000 | Fire Elemental',
-        'CZ75-Auto | Victoria', 'R8 Revolver | Fade', 'Dual Berettas | Cobra Strike', 'Five-SeveN | Hyper Beast', 'MAG-7 | Cinquedea',
+    { id: 22, name: 'Caja Élite', theme: T('elite', 'Solo para coleccionistas', '#facc15', '#2a2205'), price: 160.00, pool: [ 'SG 553 | Bulldozer', 'Galil AR | Chatterbox', 'FAMAS | Roll Cage', 'P2000 | Fire Elemental',
+        'CZ75-Auto | Victoria', 'R8 Revolver | Fade', 'Dual Berettas | Cobra Strike',
         'Sawed-Off | Wasteland Princess', 'MP9 | Starlight Protector', 'MP7 | Bloodsport', 'MP5-SD | Oxide Oasis', 'P90 | Asiimov',
-        'Tec-9 | Decimator', 'AK-47 | Vulcan', 'AWP | Asiimov', 'M4A1-S | Printstream', 'AWP | Neo-Noir',
-        '★ Flip Knife | Night', '★ Karambit | Doppler', '★ Sport Gloves | Pandora'] },
+        'Tec-9 | Decimator', 'AWP | Asiimov', 'M4A1-S | Printstream', 'AWP | Neo-Noir',
+        '★ Flip Knife | Night',] },
     // ---- new cases (ids 23-25) ----
-    { id: 23, name: 'Caja Mortal', theme: T('mortal', 'Sombras de guerra', '#dc2626', '#1f0505'), price: 5.00, mass: { consumer: 75, industrial: 25 }, pool: [
+    { id: 23, name: 'Caja Mortal', theme: T('mortal', 'Sombras de guerra', '#dc2626', '#1f0505'), price: 4.50, mass: { consumer: 75, industrial: 25 }, pool: [
         'AWP | Worm God', 'M4A4 | Buzz Kill', 'AK-47 | Slate', 'AK-47 | Frontside Misty', 'Five-SeveN | Fowl Play', 'M4A1-S | Chantico\'s Fire',
-        'XM1014 | Tranquility', 'Sawed-Off | Kiss♥Love', 'M4A1-S | Hot Rod', 'Desert Eagle | Blaze', 'AK-47 | Redline',
+        'XM1014 | Tranquility', 'Sawed-Off | Kiss♥Love', 'AK-47 | Redline',
         'AWP | Pit Viper', 'M4A4 | Magnesium', 'USP-S | Torque', 'Glock-18 | Sand Dune', 'P250 | Sand Dune', 'MAC-10 | Silver', 'Negev | Army Sheen'] },
-    { id: 24, name: 'Caja Oriental', theme: T('oriental', 'Tinta y acero', '#e11d48', '#2b0a14'), price: 9.00, pool: [
-        'AWP | Oni Taiji', 'AK-47 | Fire Serpent', 'M4A1-S | Hot Rod', 'AWP | Asiimov', 'Desert Eagle | Blaze', 'M4A4 | Howl',
-        'AK-47 | Frontside Misty', 'AWP | Worm God', 'M4A1-S | Chantico\'s Fire', 'Glock-18 | Water Elemental', 'USP-S | Kill Confirmed',
-        'AWP | Redline', 'AK-47 | Neon Rider', 'P90 | Trigon'] },
+    { id: 24, name: 'Caja Oriental', theme: T('oriental', 'Tinta y acero', '#e11d48', '#2b0a14'), price: 9.00, pool: [ 'Desert Eagle | Blaze',
+        'AK-47 | Frontside Misty', 'AWP | Worm God', 'Glock-18 | Water Elemental', 'USP-S | Kill Confirmed',
+        'AWP | Redline', 'P90 | Trigon'] },
     { id: 25, name: 'Caja Infierno', theme: T('inferno', 'Brasas de medianoche', '#f97316', '#1f0a02'), price: 60.00,
         mass: { consumer: 30, restricted: 30, classified: 20, covert: 8, gold: 12 }, pool: [
-        'P250 | Sand Dune', 'MAC-10 | Silver', 'Negev | Army Sheen', '★ Karambit | Crimson Web', '★ Butterfly Knife | Doppler', '★ Talon Knife | Fade', '★ Karambit | Doppler', '★ Flip Knife | Fade',
-        '★ Huntsman Knife | Blue Steel', 'AWP | Dragon Lore', 'AK-47 | Fire Serpent', 'M4A1-S | Golden Coil', 'AWP | Hyper Beast',
-        'Desert Eagle | Kumicho Dragon', '★ Bayonet | Tiger Tooth', 'AWP | Asiimov', 'Glock-18 | Dragon Tattoo', 'M4A4 | Howl',
-        'AK-47 | Redline', 'AWP | Redline', 'Five-SeveN | Fowl Play', 'M4A1-S | Hot Rod', 'Sawed-Off | Kiss♥Love'] }
+        'P250 | Sand Dune', 'MAC-10 | Silver', 'Negev | Army Sheen', '★ Karambit | Crimson Web', '★ Talon Knife | Fade', '★ Flip Knife | Fade',
+        '★ Huntsman Knife | Blue Steel', 'M4A1-S | Golden Coil', 'AWP | Hyper Beast',
+        'Desert Eagle | Kumicho Dragon', '★ Bayonet | Tiger Tooth', 'AWP | Asiimov', 'Glock-18 | Dragon Tattoo', 'Five-SeveN | Fowl Play', 'Sawed-Off | Kiss♥Love'] }
 ];
 
 // ==================== CATALOG LOADING ====================
