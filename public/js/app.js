@@ -80,6 +80,7 @@ state = displayFrom(auth, null);
 
 function refreshDisplay() {
     state = displayFrom(auth, state);
+    writeServerCache();
     updateUI();
     renderCases(currentFilter);
 }
@@ -123,6 +124,29 @@ function saveState() {
     }
 }
 
+// Session cache of the server profile (per tab): lets the next page paint at once and skip
+// /api/state while it is fresh. Only written with server-confirmed state, keyed by steamId.
+const SERVER_CACHE_KEY = 'skinDropServerState';
+const SERVER_CACHE_FRESH_MS = 30 * 1000;
+
+function readServerCache(steamId) {
+    try {
+        const c = JSON.parse(sessionStorage.getItem(SERVER_CACHE_KEY));
+        return c && c.steamId === String(steamId) && c.state && typeof c.state === 'object' ? c : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function writeServerCache() {
+    if (mode !== 'server' || profileLoading || !serverSteamId) return;
+    try {
+        sessionStorage.setItem(SERVER_CACHE_KEY, JSON.stringify({ steamId: serverSteamId, at: Date.now(), state: auth }));
+    } catch (e) {
+        // Storage unavailable or full: no cache, the page just loads as before
+    }
+}
+
 function setAuth(next) {
     auth = next;
     saveState();
@@ -148,6 +172,7 @@ function setProfileLoading(on) {
 function useGuestMode() {
     mode = 'guest';
     serverSteamId = null;
+    try { sessionStorage.removeItem(SERVER_CACHE_KEY); } catch (e) { /* ignore */ }
     setProfileLoading(false);
     resetSession();
     auth = loadGuestState();
@@ -168,10 +193,13 @@ async function setServerMode(steamId) {
     if (!steamId) return useGuestMode();
     mode = 'server';
     serverSteamId = String(steamId);
-    setProfileLoading(true);
+    const cached = readServerCache(serverSteamId);
+    setProfileLoading(!cached);
     resetSession();
-    auth = Engine.defaultState();
+    auth = cached ? Engine.normalizeState(cached.state) : Engine.defaultState();
     refreshDisplay();
+    // Cached and fresh: paint it and skip the request
+    if (cached && Date.now() - cached.at < SERVER_CACHE_FRESH_MS) return true;
     const seq = profileSeq;
     for (let attempt = 0; attempt < 2; attempt++) {
         try {

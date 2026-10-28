@@ -8,7 +8,8 @@
   "functions": {
     "api/index.js": {
       "includeFiles": "public/js/**",
-      "maxDuration": 15
+      "maxDuration": 15,
+      "regions": ["fra1"]
     }
   },
   "rewrites": [
@@ -16,6 +17,18 @@
     { "source": "/api/:path*", "destination": "/api/index?__p=api/:path*" }
   ],
   "headers": [
+    {
+      "source": "/(js|css)/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(png|jpg|jpeg|webp|gif|svg|ico)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
